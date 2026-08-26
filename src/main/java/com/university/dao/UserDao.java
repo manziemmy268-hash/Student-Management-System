@@ -36,6 +36,25 @@ public class UserDao {
                         session.createNativeQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = :id")
                                 .setParameter("id", user.getUserId())
                                 .executeUpdate();
+
+                        if ("Lecturer".equals(user.getRole())) {
+                            NativeQuery<?> lecLookup = session.createNativeQuery(
+                                    "SELECT lecturer_id FROM lecturers WHERE CONCAT(first_name, ' ', last_name) = :name");
+                            lecLookup.setParameter("name", user.getFullName());
+                            Object lecId = lecLookup.uniqueResult();
+                            if (lecId != null) {
+                                user.setLecturerId(((Number) lecId).intValue());
+                            }
+                        } else if ("Student".equals(user.getRole())) {
+                            NativeQuery<?> stuLookup = session.createNativeQuery(
+                                    "SELECT student_id FROM students WHERE CONCAT(first_name, ' ', last_name) = :name");
+                            stuLookup.setParameter("name", user.getFullName());
+                            Object stuId = stuLookup.uniqueResult();
+                            if (stuId != null) {
+                                user.setStudentId(((Number) stuId).intValue());
+                            }
+                        }
+
                         tx.commit();
                         return user;
                     }

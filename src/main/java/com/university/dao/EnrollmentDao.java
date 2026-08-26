@@ -48,7 +48,12 @@ public class EnrollmentDao {
         Transaction tx = null;
         try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
-            session.merge(enrollment);
+            session.createNativeQuery(
+                    "UPDATE enrollments SET grade = :grade, status = :status WHERE enrollment_id = :id")
+                    .setParameter("grade", enrollment.getGrade())
+                    .setParameter("status", enrollment.getStatus())
+                    .setParameter("id", enrollment.getEnrollmentId())
+                    .executeUpdate();
             tx.commit();
             return true;
         } catch (Exception e) {
