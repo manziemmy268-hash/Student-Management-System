@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- Hibernate is now configured programmatically via SessionFactoryManager.
+             This file is retained for reference only.
+
+             Configuration:
+             - Connection pooling: HikariCP (managed by DBConnection)
+             - Dialect: Auto-detected (MySQLDialect or H2Dialect)
+             - Schema: Managed by SQL scripts (not Hibernate auto-DDL)
+             - SessionFactory: Singleton via SessionFactoryManager.getSessionFactory()
+        -->
+        <mapping class="com.university.model.Course"/>
+        <mapping class="com.university.model.Department"/>
+        <mapping class="com.university.model.Enrollment"/>
+        <mapping class="com.university.model.Lecturer"/>
+        <mapping class="com.university.model.Student"/>
+        <mapping class="com.university.model.User"/>
+    </session-factory>
+</hibernate-configuration>
