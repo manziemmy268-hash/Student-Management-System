@@ -375,4 +375,74 @@ class ValidationUtilTest {
         assertTrue(ValidationUtil.isValidCredits("1"));
         assertTrue(ValidationUtil.isValidCredits("20"));
     }
+
+    // ===== isValidPositiveInt Tests =====
+
+    @Test
+    @DisplayName("isValidPositiveInt() returns false for null")
+    void isValidPositiveInt_null_returnsFalse() {
+        assertFalse(ValidationUtil.isValidPositiveInt(null));
+    }
+
+    @Test
+    @DisplayName("isValidPositiveInt() returns false for empty string")
+    void isValidPositiveInt_empty_returnsFalse() {
+        assertFalse(ValidationUtil.isValidPositiveInt(""));
+    }
+
+    @Test
+    @DisplayName("isValidPositiveInt() returns false for non-numeric string")
+    void isValidPositiveInt_nonNumeric_returnsFalse() {
+        assertFalse(ValidationUtil.isValidPositiveInt("abc"));
+    }
+
+    @Test
+    @DisplayName("isValidPositiveInt() returns false for zero")
+    void isValidPositiveInt_zero_returnsFalse() {
+        assertFalse(ValidationUtil.isValidPositiveInt("0"));
+    }
+
+    @Test
+    @DisplayName("isValidPositiveInt() returns false for negative number")
+    void isValidPositiveInt_negative_returnsFalse() {
+        assertFalse(ValidationUtil.isValidPositiveInt("-5"));
+    }
+
+    @Test
+    @DisplayName("isValidPositiveInt() returns true for valid positive number")
+    void isValidPositiveInt_valid_returnsTrue() {
+        assertTrue(ValidationUtil.isValidPositiveInt("50"));
+    }
+
+    // ===== isValidDate Tests =====
+
+    @Test
+    @DisplayName("isValidDate() returns false for null")
+    void isValidDate_null_returnsFalse() {
+        assertFalse(ValidationUtil.isValidDate(null));
+    }
+
+    @Test
+    @DisplayName("isValidDate() returns false for empty string")
+    void isValidDate_empty_returnsFalse() {
+        assertFalse(ValidationUtil.isValidDate(""));
+    }
+
+    @Test
+    @DisplayName("isValidDate() returns false for non-date string")
+    void isValidDate_nonDate_returnsFalse() {
+        assertFalse(ValidationUtil.isValidDate("not-a-date"));
+    }
+
+    @Test
+    @DisplayName("isValidDate() returns false for malformed date")
+    void isValidDate_malformed_returnsFalse() {
+        assertFalse(ValidationUtil.isValidDate("2026/01/01"));
+    }
+
+    @Test
+    @DisplayName("isValidDate() returns true for valid date")
+    void isValidDate_valid_returnsTrue() {
+        assertTrue(ValidationUtil.isValidDate("2026-09-01"));
+    }
 }

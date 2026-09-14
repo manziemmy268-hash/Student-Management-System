@@ -1,6 +1,7 @@
 package com.university.dao;
 
 import com.university.database.SessionFactoryManager;
+import com.university.exception.DataAccessException;
 import com.university.model.Enrollment;
 
 import org.hibernate.Session;
@@ -11,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EnrollmentDao {
 
@@ -25,7 +28,7 @@ public class EnrollmentDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to retrieve all enrollments", e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to retrieve all enrollments", e);
         }
     }
 
@@ -37,10 +40,14 @@ public class EnrollmentDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to add enrollment for student {} course {}",
                     enrollment.getStudentId(), enrollment.getCourseId(), e);
-            return false;
+            throw new DataAccessException("Failed to add enrollment", e);
         }
     }
 
@@ -57,9 +64,13 @@ public class EnrollmentDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to update enrollment id: {}", enrollment.getEnrollmentId(), e);
-            return false;
+            throw new DataAccessException("Failed to update enrollment id: " + enrollment.getEnrollmentId(), e);
         }
     }
 
@@ -76,9 +87,13 @@ public class EnrollmentDao {
             tx.rollback();
             return false;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to delete enrollment id: {}", enrollmentId, e);
-            return false;
+            throw new DataAccessException("Failed to delete enrollment id: " + enrollmentId, e);
         }
     }
 
@@ -94,7 +109,7 @@ public class EnrollmentDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to search enrollments with keyword: {}", keyword, e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to search enrollments", e);
         }
     }
 
@@ -104,7 +119,25 @@ public class EnrollmentDao {
             return query.getSingleResult().intValue();
         } catch (Exception e) {
             logger.error("Failed to get enrollment count", e);
-            return 0;
+            throw new DataAccessException("Failed to get enrollment count", e);
+        }
+    }
+
+    public boolean isDuplicateEnrollment(int studentId, int courseId, String semester, String academicYear, int excludeId) {
+        try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(e) FROM Enrollment e WHERE e.studentId = :sid AND e.courseId = :cid " +
+                    "AND e.semester = :sem AND e.academicYear = :year AND e.enrollmentId != :id",
+                    Long.class);
+            query.setParameter("sid", studentId);
+            query.setParameter("cid", courseId);
+            query.setParameter("sem", semester);
+            query.setParameter("year", academicYear);
+            query.setParameter("id", excludeId);
+            return query.getSingleResult() > 0;
+        } catch (Exception e) {
+            logger.error("Failed to check duplicate enrollment", e);
+            throw new DataAccessException("Failed to check duplicate enrollment", e);
         }
     }
 
@@ -117,7 +150,7 @@ public class EnrollmentDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to retrieve enrollments for student: {}", studentId, e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to retrieve enrollments for student: " + studentId, e);
         }
     }
 
@@ -130,7 +163,7 @@ public class EnrollmentDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to retrieve enrollments for course: {}", courseId, e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to retrieve enrollments for course: " + courseId, e);
         }
     }
 
@@ -142,7 +175,22 @@ public class EnrollmentDao {
             return query.getSingleResult().intValue();
         } catch (Exception e) {
             logger.error("Failed to get enrollment count for course: {}", courseId, e);
-            return 0;
+            throw new DataAccessException("Failed to get enrollment count for course: " + courseId, e);
+        }
+    }
+
+    public Map<Integer, Integer> getEnrollmentCountsByCourse() {
+        String sql = "SELECT course_id, COUNT(*) FROM enrollments WHERE status = 'Enrolled' GROUP BY course_id";
+        try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
+            NativeQuery<Object[]> query = session.createNativeQuery(sql, Object[].class);
+            Map<Integer, Integer> counts = new HashMap<>();
+            for (Object[] row : query.getResultList()) {
+                counts.put(((Number) row[0]).intValue(), ((Number) row[1]).intValue());
+            }
+            return counts;
+        } catch (Exception e) {
+            logger.error("Failed to get enrollment counts by course", e);
+            throw new DataAccessException("Failed to get enrollment counts by course", e);
         }
     }
 
@@ -155,7 +203,7 @@ public class EnrollmentDao {
             return new ArrayList<>(query.getResultList());
         } catch (Exception e) {
             logger.error("Failed to get students per course", e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to get students per course", e);
         }
     }
 
@@ -168,7 +216,29 @@ public class EnrollmentDao {
             return new ArrayList<>(query.getResultList());
         } catch (Exception e) {
             logger.error("Failed to get students per department", e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to get students per department", e);
+        }
+    }
+
+    public boolean updateGrade(int enrollmentId, String grade) {
+        Transaction tx = null;
+        try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            session.createNativeQuery(
+                    "UPDATE enrollments SET grade = :grade WHERE enrollment_id = :id")
+                    .setParameter("grade", grade)
+                    .setParameter("id", enrollmentId)
+                    .executeUpdate();
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
+            logger.error("Failed to update grade for enrollment id: {}", enrollmentId, e);
+            throw new DataAccessException("Failed to update grade for enrollment id: " + enrollmentId, e);
         }
     }
 }

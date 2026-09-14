@@ -18,6 +18,11 @@ import java.util.stream.Collectors;
 public class DBConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(DBConnection.class);
+    private static final String DRIVER_H2 = "org.h2.Driver";
+    private static final String DRIVER_MYSQL = "com.mysql.cj.jdbc.Driver";
+    private static final String DEFAULT_MYSQL_URL =
+            "jdbc:mysql://localhost:3306/university_db?sslMode=PREFERRED&serverTimezone=UTC";
+
     private static HikariDataSource dataSource;
     private static boolean isH2;
 
@@ -33,10 +38,15 @@ public class DBConnection {
                 logger.info("db.properties not found, using environment variables with defaults");
             }
 
-            String url = resolve(props, "db.url", "JDBC_URL",
-                    "jdbc:mysql://localhost:3306/university_db?useSSL=false&serverTimezone=UTC");
+            String url = resolve(props, "db.url", "JDBC_URL", DEFAULT_MYSQL_URL);
             String username = resolve(props, "db.username", "DB_USERNAME", "root");
             String password = resolve(props, "db.password", "DB_PASSWORD", "");
+
+            if (url.startsWith("jdbc:mysql://")
+                    && "root".equals(username) && password.isEmpty()) {
+                logger.warn("Using default MySQL credentials. Set db.properties, the {} system property, or "
+                        + "the JDBC_URL/DB_USERNAME/DB_PASSWORD environment variables.", "db.url");
+            }
 
             isH2 = url.contains(":h2:");
 
@@ -46,11 +56,11 @@ public class DBConnection {
             config.setPassword(password);
 
             if (isH2) {
-                config.setDriverClassName("org.h2.Driver");
+                config.setDriverClassName(DRIVER_H2);
                 config.setMaximumPoolSize(5);
                 logger.info("Configuring H2 database (demo mode)");
             } else {
-                config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+                config.setDriverClassName(DRIVER_MYSQL);
                 config.setMaximumPoolSize(10);
                 config.setMinimumIdle(2);
                 config.setConnectionTimeout(5000);
@@ -123,6 +133,10 @@ public class DBConnection {
     }
 
     private static String resolve(Properties props, String propKey, String envKey, String defaultValue) {
+        String propVal = System.getProperty(propKey);
+        if (propVal != null && !propVal.isEmpty()) {
+            return propVal;
+        }
         String envVal = System.getenv(envKey);
         if (envVal != null && !envVal.isEmpty()) {
             return envVal;
@@ -132,6 +146,10 @@ public class DBConnection {
 
     public static javax.sql.DataSource getDataSource() {
         return dataSource;
+    }
+
+    public static String getDriverClassName() {
+        return isH2 ? DRIVER_H2 : DRIVER_MYSQL;
     }
 
     public static Connection getConnection() throws SQLException {

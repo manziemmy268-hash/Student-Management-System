@@ -102,6 +102,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean deleteUser(int userId) {
+        User user = userDao.getUserById(userId);
+        if (user != null && "Admin".equals(user.getRole())) {
+            int adminCount = userDao.getRoleCount("Admin");
+            if (adminCount <= 1) {
+                logger.warn("Blocked deletion of the last admin account id: {}", userId);
+                throw new ValidationException("Cannot delete the last admin account. Promote another user to Admin first.");
+            }
+        }
         logger.info("Deleting user id: {}", userId);
         boolean result = userDao.deleteUser(userId);
         if (result) {

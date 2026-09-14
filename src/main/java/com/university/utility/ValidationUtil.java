@@ -56,6 +56,25 @@ public final class ValidationUtil {
         }
     }
 
+    public static boolean isValidPositiveInt(String value) {
+        if (!isNotEmpty(value)) return false;
+        try {
+            return Integer.parseInt(value) > 0;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static boolean isValidDate(String value) {
+        if (!isNotEmpty(value)) return false;
+        try {
+            java.sql.Date.valueOf(value.trim());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     public static boolean isValidName(String name) {
         return isNotEmpty(name) && name.trim().length() >= 2;
     }

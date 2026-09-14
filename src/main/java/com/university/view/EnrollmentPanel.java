@@ -13,6 +13,7 @@ import com.university.service.EnrollmentServiceImpl;
 import com.university.service.StudentService;
 import com.university.service.StudentServiceImpl;
 import com.university.utility.Constants;
+import com.university.utility.ValidationUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,17 +198,13 @@ public class EnrollmentPanel extends JPanel {
     public void openAddDialog() {
         JDialog dialog = createDialog("New Enrollment", 500, 470);
         JPanel form = createFormPanel();
-        List<Student> students = studentService.getAllStudents();
-        List<Course> courses = courseService.getAllCourses();
 
         JComboBox<Student> cmbStudent = new JComboBox<>();
-        for (Student s : students) cmbStudent.addItem(s);
         JComboBox<Course> cmbCourse = new JComboBox<>();
-        for (Course c : courses) cmbCourse.addItem(c);
         JTextField txtDate = new JTextField(java.time.LocalDate.now().toString(), 20);
-        JComboBox<String> cmbSemester = new JComboBox<>(lookupDao.getOptionsArray("semester"));
-        JComboBox<String> cmbYear = new JComboBox<>(lookupDao.getOptionsArray("academic_year"));
-        JComboBox<String> cmbStatus = new JComboBox<>(lookupDao.getOptionsArray("enrollment_status"));
+        JComboBox<String> cmbSemester = new JComboBox<>();
+        JComboBox<String> cmbYear = new JComboBox<>();
+        JComboBox<String> cmbStatus = new JComboBox<>();
 
         int row = 0;
         addFormRow(form, row++, "Student *:", cmbStudent);
@@ -221,6 +218,7 @@ public class EnrollmentPanel extends JPanel {
         Constants.styleButton(btnSave, Constants.SUCCESS_COLOR);
         JButton btnCancel = new JButton("Cancel");
         Constants.styleButton(btnCancel, new Color(108, 117, 125));
+        btnSave.setEnabled(false);
 
         btnSave.addActionListener(e -> {
             try {
@@ -230,6 +228,10 @@ public class EnrollmentPanel extends JPanel {
                 }
                 if (cmbCourse.getSelectedItem() == null) {
                     JOptionPane.showMessageDialog(dialog, "Please select a course.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.isValidDate(txtDate.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Enrollment Date must be a valid date in yyyy-MM-dd format.", "Validation", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
                 Enrollment enrollment = new Enrollment();
@@ -256,6 +258,48 @@ public class EnrollmentPanel extends JPanel {
             }
         });
         btnCancel.addActionListener(e -> dialog.dispose());
+
+        final List<Student>[] studentsHolder = new List[1];
+        final List<Course>[] coursesHolder = new List[1];
+        final String[][] semesterHolder = new String[1][];
+        final String[][] yearHolder = new String[1][];
+        final String[][] statusHolder = new String[1][];
+
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                studentsHolder[0] = studentService.getAllStudents();
+                coursesHolder[0] = courseService.getAllCourses();
+                semesterHolder[0] = lookupDao.getOptionsArray("semester");
+                yearHolder[0] = lookupDao.getOptionsArray("academic_year");
+                statusHolder[0] = lookupDao.getOptionsArray("enrollment_status");
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                    for (Student s : studentsHolder[0]) cmbStudent.addItem(s);
+                    for (Course c : coursesHolder[0]) cmbCourse.addItem(c);
+                    for (String sem : semesterHolder[0]) cmbSemester.addItem(sem);
+                    for (String year : yearHolder[0]) cmbYear.addItem(year);
+                    for (String status : statusHolder[0]) cmbStatus.addItem(status);
+                    if (cmbStudent.getItemCount() == 0) {
+                        JOptionPane.showMessageDialog(dialog, "No students available. Add students first.", "No Data", JOptionPane.WARNING_MESSAGE);
+                    }
+                    if (cmbCourse.getItemCount() == 0) {
+                        JOptionPane.showMessageDialog(dialog, "No courses available. Add courses first.", "No Data", JOptionPane.WARNING_MESSAGE);
+                    }
+                    btnSave.setEnabled(true);
+                } catch (Exception ex) {
+                    logger.error("Failed to load students/courses for enrollment dialog", ex);
+                    JOptionPane.showMessageDialog(dialog, "Failed to load data. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                    dialog.dispose();
+                }
+            }
+        }.execute();
+
         addDialogButtons(dialog, form, btnSave, btnCancel);
     }
 
@@ -272,7 +316,8 @@ public class EnrollmentPanel extends JPanel {
         JDialog dialog = createDialog("Update Enrollment", 400, 280);
         JPanel form = createFormPanel();
         JComboBox<String> cmbGrade = new JComboBox<>(lookupDao.getOptionsArray("grade"));
-        cmbGrade.setSelectedItem(tableModel.getValueAt(row, 7));
+        Object gradeValue = tableModel.getValueAt(row, 7);
+        cmbGrade.setSelectedItem("-".equals(gradeValue) ? null : gradeValue);
         JComboBox<String> cmbStatus = new JComboBox<>(lookupDao.getOptionsArray("enrollment_status"));
         cmbStatus.setSelectedItem(tableModel.getValueAt(row, 8));
 

@@ -10,6 +10,7 @@ import com.university.service.DepartmentServiceImpl;
 import com.university.service.LecturerService;
 import com.university.service.LecturerServiceImpl;
 import com.university.utility.Constants;
+import com.university.utility.ValidationUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,6 +229,10 @@ public class LecturerPanel extends JPanel {
 
         btnSave.addActionListener(e -> {
             try {
+                if (!ValidationUtil.isValidDate(txtHireDate.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Hire Date must be a valid date in yyyy-MM-dd format.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 Lecturer lec = new Lecturer();
                 lec.setFirstName(txtFirstName.getText().trim());
                 lec.setLastName(txtLastName.getText().trim());
@@ -295,6 +300,10 @@ public class LecturerPanel extends JPanel {
 
         btnUpdate.addActionListener(e -> {
             try {
+                if (!ValidationUtil.isValidDate(txtHireDate.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Hire Date must be a valid date in yyyy-MM-dd format.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 lec.setFirstName(txtFirstName.getText().trim());
                 lec.setLastName(txtLastName.getText().trim());
                 lec.setEmail(txtEmail.getText().trim());

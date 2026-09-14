@@ -10,6 +10,7 @@ import com.university.service.DepartmentServiceImpl;
 import com.university.service.StudentService;
 import com.university.service.StudentServiceImpl;
 import com.university.utility.Constants;
+import com.university.utility.ValidationUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -261,6 +262,18 @@ public class StudentPanel extends JPanel {
 
         btnSave.addActionListener(e -> {
             try {
+                if (!ValidationUtil.isValidDate(txtDob.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Date of Birth must be a valid date in yyyy-MM-dd format.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.isValidDate(txtEnrollDate.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Enrollment Date must be a valid date in yyyy-MM-dd format.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.isValidGpa(txtGpa.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "GPA must be a number between 0.00 and 4.00.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 Student student = new Student();
                 student.setFirstName(txtFirstName.getText().trim());
                 student.setLastName(txtLastName.getText().trim());
@@ -342,6 +355,18 @@ public class StudentPanel extends JPanel {
 
         btnUpdate.addActionListener(e -> {
             try {
+                if (!ValidationUtil.isValidDate(txtDob.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Date of Birth must be a valid date in yyyy-MM-dd format.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.isValidDate(txtEnrollDate.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Enrollment Date must be a valid date in yyyy-MM-dd format.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.isValidGpa(txtGpa.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "GPA must be a number between 0.00 and 4.00.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 student.setFirstName(txtFirstName.getText().trim());
                 student.setLastName(txtLastName.getText().trim());
                 student.setEmail(txtEmail.getText().trim());

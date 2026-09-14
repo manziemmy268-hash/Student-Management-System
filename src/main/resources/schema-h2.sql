@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS lecturers (
     department_id INT,
     lecturer_rank VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS students (
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS students (
     gpa DECIMAL(3,2) DEFAULT 0.00,
     status VARCHAR(20) DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Graduated', 'Suspended')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS courses (
@@ -50,11 +50,11 @@ CREATE TABLE IF NOT EXISTS courses (
     credits INT NOT NULL DEFAULT 3,
     department_id INT,
     lecturer_id INT,
-    description VARCHAR(1000),
+    description TEXT,
     max_enrollment INT DEFAULT 50,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL,
-    FOREIGN KEY (lecturer_id) REFERENCES lecturers(lecturer_id) ON DELETE SET NULL
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (lecturer_id) REFERENCES lecturers(lecturer_id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS enrollments (
@@ -67,8 +67,9 @@ CREATE TABLE IF NOT EXISTS enrollments (
     grade VARCHAR(2),
     status VARCHAR(20) DEFAULT 'Enrolled' CHECK (status IN ('Enrolled', 'Completed', 'Dropped', 'Failed')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    UNIQUE KEY unique_enrollment (student_id, course_id, semester, academic_year)
 );
 
 CREATE TABLE IF NOT EXISTS system_lookup (
@@ -165,7 +166,6 @@ INSERT INTO users (username, password, full_name, role) VALUES
 ('admin', '$2a$10$aa58R2hwVaITdWpCFSnrQud/0kJKJZkDIKpTzQA6Sd2jFRNeIN7P6', 'System Administrator', 'Admin'),
 ('staff1', '$2a$10$ltEFMv5u3ZDIKAO7hEcMaOMi2xDcgG.TI2y92Xz68cZGvc1bvIjaq', 'John Staff', 'Staff'),
 ('lecturer1', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', 'Jean Mugabo', 'Lecturer'),
-('lecturer2', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', 'Marie Uwimana', 'Lecturer'),
 ('staff2', '$2a$10$ltEFMv5u3ZDIKAO7hEcMaOMi2xDcgG.TI2y92Xz68cZGvc1bvIjaq', 'Mary Staff', 'Staff');
 
 INSERT INTO system_lookup (lookup_category, lookup_value, sort_order, is_active) VALUES

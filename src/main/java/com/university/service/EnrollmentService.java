@@ -4,6 +4,7 @@ import com.university.model.Course;
 import com.university.model.Enrollment;
 import com.university.model.Student;
 import java.util.List;
+import java.util.Map;
 
 public interface EnrollmentService {
 
@@ -18,6 +19,8 @@ public interface EnrollmentService {
     List<Enrollment> getEnrollmentsByCourse(int courseId);
 
     int getEnrollmentCountByCourse(int courseId);
+
+    Map<Integer, Integer> getEnrollmentCountsByCourse();
 
     boolean addEnrollment(Enrollment enrollment);
 

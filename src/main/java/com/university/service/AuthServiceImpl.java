@@ -12,18 +12,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User authenticate(String username, String password) {
-        try {
-            User user = userDao.authenticate(username, password);
-            if (user != null) {
-                logger.info("User '{}' logged in with role '{}'.", username, user.getRole());
-            } else {
-                logger.warn("Failed login attempt for '{}'.", username);
-            }
-            return user;
-        } catch (Exception e) {
-            logger.error("Authentication error for '{}'", username, e);
-            return null;
+        User user = userDao.authenticate(username, password);
+        if (user != null) {
+            logger.info("User '{}' logged in with role '{}'.", username, user.getRole());
+        } else {
+            logger.warn("Failed login attempt for '{}'.", username);
         }
+        return user;
     }
 
     @Override

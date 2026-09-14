@@ -25,8 +25,10 @@ public class UserPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTextField txtSearch;
     private JLabel lblRecordCount;
+    private final int currentUserId;
 
-    public UserPanel() {
+    public UserPanel(int currentUserId) {
+        this.currentUserId = currentUserId;
         initUI();
         loadUsers();
     }
@@ -379,6 +381,10 @@ public class UserPanel extends JPanel {
     private void deleteSelectedUser() {
         int userId = getSelectedId();
         if (userId == -1) { JOptionPane.showMessageDialog(this, "Please select a user to delete."); return; }
+        if (userId == currentUserId) {
+            JOptionPane.showMessageDialog(this, "You cannot delete your own account.", "Cannot Delete", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         int row = table.getSelectedRow();
         String name = (String) tableModel.getValueAt(row, 2);
 
@@ -386,11 +392,18 @@ public class UserPanel extends JPanel {
                 "Are you sure you want to delete user:\n" + name + "?",
                 "Confirm Delete", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
         if (confirm == JOptionPane.YES_OPTION) {
-            if (userService.deleteUser(userId)) {
-                JOptionPane.showMessageDialog(this, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                loadUsers();
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
+            try {
+                if (userService.deleteUser(userId)) {
+                    JOptionPane.showMessageDialog(this, "User deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    loadUsers();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Failed to delete user.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (ValidationException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Cannot Delete", JOptionPane.WARNING_MESSAGE);
+            } catch (Exception ex) {
+                logger.error("Error deleting user", ex);
+                JOptionPane.showMessageDialog(this, "An error occurred. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

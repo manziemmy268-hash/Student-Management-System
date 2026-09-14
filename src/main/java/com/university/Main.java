@@ -4,10 +4,15 @@ import com.university.database.DBConnection;
 import com.university.view.LoginFrame;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class Main {
+
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         Runtime.getRuntime().addShutdownHook(new Thread(DBConnection::shutdown));
@@ -15,13 +20,13 @@ public class Main {
         try {
             UIManager.setLookAndFeel(new FlatDarkLaf());
         } catch (Exception e) {
-            System.err.println("Failed to initialize FlatLaf theme");
+            logger.error("Failed to initialize FlatLaf theme", e);
         }
 
         SwingUtilities.invokeLater(() -> {
             if (DBConnection.testConnection()) {
                 String dbType = DBConnection.isH2() ? "H2 (Demo Mode)" : "MySQL";
-                System.out.println("Connected to " + dbType + " database.");
+                logger.info("Connected to {} database.", dbType);
                 new LoginFrame().setVisible(true);
             } else {
                 String message;

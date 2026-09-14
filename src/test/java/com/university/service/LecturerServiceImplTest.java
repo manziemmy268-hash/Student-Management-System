@@ -60,7 +60,7 @@ class LecturerServiceImplTest {
     @DisplayName("addLecturer() returns true for a valid lecturer")
     void addLecturer_validLecturer_returnsTrue() {
         Lecturer lecturer = buildLecturer(0, "Carol", "White", "carol@uni.edu");
-        when(lecturerDao.getAllLecturers()).thenReturn(Collections.emptyList());
+        when(lecturerDao.isEmailDuplicate("carol@uni.edu", 0)).thenReturn(false);
         when(lecturerDao.addLecturer(lecturer)).thenReturn(true);
 
         boolean result = lecturerService.addLecturer(lecturer);
@@ -70,10 +70,25 @@ class LecturerServiceImplTest {
     }
 
     @Test
+    @DisplayName("addLecturer() sets a hashed default password when none is provided")
+    void addLecturer_noPassword_setsHashedInitialPassword() {
+        Lecturer lecturer = buildLecturer(0, "Dana", "Black", "dana@uni.edu");
+        when(lecturerDao.isEmailDuplicate("dana@uni.edu", 0)).thenReturn(false);
+        when(lecturerDao.addLecturer(lecturer)).thenReturn(true);
+
+        boolean result = lecturerService.addLecturer(lecturer);
+
+        assertTrue(result);
+        assertNotNull(lecturer.getPassword());
+        assertTrue(lecturer.getPassword().startsWith("$2a$"));
+        assertTrue(org.mindrot.jbcrypt.BCrypt.checkpw("lecturer123", lecturer.getPassword()));
+        verify(lecturerDao, times(1)).addLecturer(lecturer);
+    }
+
+    @Test
     @DisplayName("addLecturer() throws DuplicateEntityException for duplicate email")
     void addLecturer_duplicateEmail_throwsDuplicateEntityException() {
-        Lecturer existing = buildLecturer(1, "Alice", "Smith", "alice@uni.edu");
-        when(lecturerDao.getAllLecturers()).thenReturn(Arrays.asList(existing));
+        when(lecturerDao.isEmailDuplicate("alice@uni.edu", 0)).thenReturn(true);
 
         Lecturer duplicate = buildLecturer(0, "Bob", "Jones", "alice@uni.edu");
 
@@ -136,8 +151,7 @@ class LecturerServiceImplTest {
     @Test
     @DisplayName("isEmailDuplicate() returns true when email exists with different id")
     void isEmailDuplicate_existingEmail_returnsTrue() {
-        Lecturer existing = buildLecturer(1, "Alice", "Smith", "alice@uni.edu");
-        when(lecturerDao.getAllLecturers()).thenReturn(Arrays.asList(existing));
+        when(lecturerDao.isEmailDuplicate("alice@uni.edu", 0)).thenReturn(true);
 
         boolean result = lecturerService.isEmailDuplicate("alice@uni.edu", 0);
 
@@ -147,8 +161,7 @@ class LecturerServiceImplTest {
     @Test
     @DisplayName("isEmailDuplicate() returns true for different id with same email")
     void isEmailDuplicate_differentId_returnsTrue() {
-        Lecturer existing = buildLecturer(5, "Alice", "Smith", "alice@uni.edu");
-        when(lecturerDao.getAllLecturers()).thenReturn(Arrays.asList(existing));
+        when(lecturerDao.isEmailDuplicate("alice@uni.edu", 10)).thenReturn(true);
 
         boolean result = lecturerService.isEmailDuplicate("alice@uni.edu", 10);
 
@@ -158,8 +171,7 @@ class LecturerServiceImplTest {
     @Test
     @DisplayName("isEmailDuplicate() returns false when no duplicate exists")
     void isEmailDuplicate_noDuplicate_returnsFalse() {
-        Lecturer existing = buildLecturer(1, "Alice", "Smith", "alice@uni.edu");
-        when(lecturerDao.getAllLecturers()).thenReturn(Arrays.asList(existing));
+        when(lecturerDao.isEmailDuplicate("bob@uni.edu", 0)).thenReturn(false);
 
         boolean result = lecturerService.isEmailDuplicate("bob@uni.edu", 0);
 

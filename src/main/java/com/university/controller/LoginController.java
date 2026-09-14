@@ -22,12 +22,7 @@ public class LoginController {
     }
 
     public boolean authenticate(String username, String password) {
-        try {
-            currentUser = authService.authenticate(username, password);
-        } catch (Exception e) {
-            logger.error("Authentication error for '{}'", username, e);
-            currentUser = null;
-        }
+        currentUser = authService.authenticate(username, password);
         return currentUser != null;
     }
 

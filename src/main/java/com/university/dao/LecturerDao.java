@@ -1,6 +1,7 @@
 package com.university.dao;
 
 import com.university.database.SessionFactoryManager;
+import com.university.exception.DataAccessException;
 import com.university.model.Lecturer;
 
 import org.hibernate.Session;
@@ -23,7 +24,7 @@ public class LecturerDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to retrieve all lecturers", e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to retrieve all lecturers", e);
         }
     }
 
@@ -35,7 +36,7 @@ public class LecturerDao {
             return query.uniqueResultOptional().orElse(null);
         } catch (Exception e) {
             logger.error("Failed to retrieve lecturer by id: {}", id, e);
-            return null;
+            throw new DataAccessException("Failed to retrieve lecturer by id: " + id, e);
         }
     }
 
@@ -50,7 +51,7 @@ public class LecturerDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to search lecturers with keyword: {}", keyword, e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to search lecturers", e);
         }
     }
 
@@ -62,9 +63,13 @@ public class LecturerDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to add lecturer: {} {}", lecturer.getFirstName(), lecturer.getLastName(), e);
-            return false;
+            throw new DataAccessException("Failed to add lecturer: " + lecturer.getFirstName() + " " + lecturer.getLastName(), e);
         }
     }
 
@@ -76,9 +81,13 @@ public class LecturerDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to update lecturer id: {}", lecturer.getLecturerId(), e);
-            return false;
+            throw new DataAccessException("Failed to update lecturer id: " + lecturer.getLecturerId(), e);
         }
     }
 
@@ -95,9 +104,13 @@ public class LecturerDao {
             tx.rollback();
             return false;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to delete lecturer id: {}", lecturerId, e);
-            return false;
+            throw new DataAccessException("Failed to delete lecturer id: " + lecturerId, e);
         }
     }
 
@@ -107,7 +120,21 @@ public class LecturerDao {
             return query.getSingleResult().intValue();
         } catch (Exception e) {
             logger.error("Failed to get lecturer count", e);
-            return 0;
+            throw new DataAccessException("Failed to get lecturer count", e);
+        }
+    }
+
+    public boolean isEmailDuplicate(String email, int excludeId) {
+        try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(l) FROM Lecturer l WHERE LOWER(l.email) = LOWER(:email) AND l.lecturerId != :id",
+                    Long.class);
+            query.setParameter("email", email);
+            query.setParameter("id", excludeId);
+            return query.getSingleResult() > 0;
+        } catch (Exception e) {
+            logger.error("Failed to check lecturer email duplicate: {}", email, e);
+            throw new DataAccessException("Failed to check lecturer email duplicate", e);
         }
     }
 }

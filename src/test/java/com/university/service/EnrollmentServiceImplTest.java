@@ -98,7 +98,7 @@ class EnrollmentServiceImplTest {
     @DisplayName("addEnrollment() returns true for a valid enrollment")
     void addEnrollment_validEnrollment_returnsTrue() {
         Enrollment enrollment = buildEnrollment(0, 1, 1, "Fall", "2025");
-        when(enrollmentDao.getAllEnrollments()).thenReturn(Collections.emptyList());
+        when(enrollmentDao.isDuplicateEnrollment(1, 1, "Fall", "2025", -1)).thenReturn(false);
         when(enrollmentDao.addEnrollment(enrollment)).thenReturn(true);
 
         boolean result = enrollmentService.addEnrollment(enrollment);
@@ -110,8 +110,7 @@ class EnrollmentServiceImplTest {
     @Test
     @DisplayName("addEnrollment() throws ValidationException for duplicate enrollment")
     void addEnrollment_duplicateEnrollment_throwsValidationException() {
-        Enrollment existing = buildEnrollment(1, 1, 1, "Fall", "2025");
-        when(enrollmentDao.getAllEnrollments()).thenReturn(Arrays.asList(existing));
+        when(enrollmentDao.isDuplicateEnrollment(1, 1, "Fall", "2025", -1)).thenReturn(true);
 
         Enrollment duplicate = buildEnrollment(0, 1, 1, "Fall", "2025");
 

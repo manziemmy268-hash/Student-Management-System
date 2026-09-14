@@ -61,7 +61,7 @@ class StudentServiceImplTest {
     @DisplayName("addStudent() returns true for a valid student")
     void addStudent_validStudent_returnsTrue() {
         Student student = buildStudent(0, "Carol", "White", "carol@uni.edu");
-        when(studentDao.getAllStudents()).thenReturn(Collections.emptyList());
+        when(studentDao.isEmailDuplicate("carol@uni.edu", 0)).thenReturn(false);
         when(studentDao.addStudent(student)).thenReturn(true);
 
         boolean result = studentService.addStudent(student);
@@ -71,10 +71,25 @@ class StudentServiceImplTest {
     }
 
     @Test
+    @DisplayName("addStudent() sets a hashed default password when none is provided")
+    void addStudent_noPassword_setsHashedInitialPassword() {
+        Student student = buildStudent(0, "Dana", "Black", "dana@uni.edu");
+        when(studentDao.isEmailDuplicate("dana@uni.edu", 0)).thenReturn(false);
+        when(studentDao.addStudent(student)).thenReturn(true);
+
+        boolean result = studentService.addStudent(student);
+
+        assertTrue(result);
+        assertNotNull(student.getPassword());
+        assertTrue(student.getPassword().startsWith("$2a$"));
+        assertTrue(org.mindrot.jbcrypt.BCrypt.checkpw("student123", student.getPassword()));
+        verify(studentDao, times(1)).addStudent(student);
+    }
+
+    @Test
     @DisplayName("addStudent() throws DuplicateEntityException for duplicate email")
     void addStudent_duplicateEmail_throwsDuplicateEntityException() {
-        Student existing = buildStudent(1, "Alice", "Smith", "alice@uni.edu");
-        when(studentDao.getAllStudents()).thenReturn(Arrays.asList(existing));
+        when(studentDao.isEmailDuplicate("alice@uni.edu", 0)).thenReturn(true);
 
         Student duplicate = buildStudent(0, "Bob", "Jones", "alice@uni.edu");
 
@@ -137,8 +152,7 @@ class StudentServiceImplTest {
     @Test
     @DisplayName("isEmailDuplicate() returns true when email exists with different id")
     void isEmailDuplicate_existingEmail_returnsTrue() {
-        Student existing = buildStudent(1, "Alice", "Smith", "alice@uni.edu");
-        when(studentDao.getAllStudents()).thenReturn(Arrays.asList(existing));
+        when(studentDao.isEmailDuplicate("alice@uni.edu", 0)).thenReturn(true);
 
         boolean result = studentService.isEmailDuplicate("alice@uni.edu", 0);
 
@@ -148,8 +162,7 @@ class StudentServiceImplTest {
     @Test
     @DisplayName("isEmailDuplicate() returns true for different id with same email")
     void isEmailDuplicate_differentId_returnsTrue() {
-        Student existing = buildStudent(5, "Alice", "Smith", "alice@uni.edu");
-        when(studentDao.getAllStudents()).thenReturn(Arrays.asList(existing));
+        when(studentDao.isEmailDuplicate("alice@uni.edu", 10)).thenReturn(true);
 
         boolean result = studentService.isEmailDuplicate("alice@uni.edu", 10);
 
@@ -159,8 +172,7 @@ class StudentServiceImplTest {
     @Test
     @DisplayName("isEmailDuplicate() returns false when no duplicate exists")
     void isEmailDuplicate_noDuplicate_returnsFalse() {
-        Student existing = buildStudent(1, "Alice", "Smith", "alice@uni.edu");
-        when(studentDao.getAllStudents()).thenReturn(Arrays.asList(existing));
+        when(studentDao.isEmailDuplicate("bob@uni.edu", 0)).thenReturn(false);
 
         boolean result = studentService.isEmailDuplicate("bob@uni.edu", 0);
 

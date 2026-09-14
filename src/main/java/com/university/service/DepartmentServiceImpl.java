@@ -55,13 +55,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public boolean isCodeDuplicate(String departmentCode, int excludeId) {
-        List<Department> departments = getAllDepartments();
-        for (Department d : departments) {
-            if (d.getDepartmentCode().equalsIgnoreCase(departmentCode) && d.getDepartmentId() != excludeId) {
-                return true;
-            }
-        }
-        return false;
+        return departmentDao.isCodeDuplicate(departmentCode, excludeId);
     }
 
     @Override

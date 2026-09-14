@@ -1,6 +1,7 @@
 package com.university.dao;
 
 import com.university.database.SessionFactoryManager;
+import com.university.exception.DataAccessException;
 import com.university.model.Student;
 
 import org.hibernate.Session;
@@ -23,7 +24,7 @@ public class StudentDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to retrieve all students", e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to retrieve all students", e);
         }
     }
 
@@ -35,7 +36,7 @@ public class StudentDao {
             return query.uniqueResultOptional().orElse(null);
         } catch (Exception e) {
             logger.error("Failed to retrieve student by id: {}", id, e);
-            return null;
+            throw new DataAccessException("Failed to retrieve student by id: " + id, e);
         }
     }
 
@@ -50,7 +51,7 @@ public class StudentDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to search students with keyword: {}", keyword, e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to search students", e);
         }
     }
 
@@ -62,9 +63,13 @@ public class StudentDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to add student: {} {}", student.getFirstName(), student.getLastName(), e);
-            return false;
+            throw new DataAccessException("Failed to add student: " + student.getFirstName() + " " + student.getLastName(), e);
         }
     }
 
@@ -76,9 +81,13 @@ public class StudentDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to update student id: {}", student.getStudentId(), e);
-            return false;
+            throw new DataAccessException("Failed to update student id: " + student.getStudentId(), e);
         }
     }
 
@@ -95,9 +104,13 @@ public class StudentDao {
             tx.rollback();
             return false;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to delete student id: {}", studentId, e);
-            return false;
+            throw new DataAccessException("Failed to delete student id: " + studentId, e);
         }
     }
 
@@ -107,7 +120,21 @@ public class StudentDao {
             return query.getSingleResult().intValue();
         } catch (Exception e) {
             logger.error("Failed to get student count", e);
-            return 0;
+            throw new DataAccessException("Failed to get student count", e);
+        }
+    }
+
+    public boolean isEmailDuplicate(String email, int excludeId) {
+        try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery(
+                    "SELECT COUNT(s) FROM Student s WHERE LOWER(s.email) = LOWER(:email) AND s.studentId != :id",
+                    Long.class);
+            query.setParameter("email", email);
+            query.setParameter("id", excludeId);
+            return query.getSingleResult() > 0;
+        } catch (Exception e) {
+            logger.error("Failed to check student email duplicate: {}", email, e);
+            throw new DataAccessException("Failed to check student email duplicate", e);
         }
     }
 }

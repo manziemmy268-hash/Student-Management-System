@@ -48,6 +48,10 @@ public class DashboardFrame extends JFrame {
         return "Admin".equals(currentUser.getRole()) || "Staff".equals(currentUser.getRole());
     }
 
+    private boolean isSystemAdmin() {
+        return "Admin".equals(currentUser.getRole());
+    }
+
     private boolean isStudent() {
         return "Student".equals(currentUser.getRole());
     }
@@ -192,8 +196,10 @@ public class DashboardFrame extends JFrame {
             addSidebarItem(sidebar, "DEPARTMENTS", "Departments");
             addSidebarItem(sidebar, "COURSES", "Courses");
             addSidebarItem(sidebar, "ENROLLMENTS", "Enrollments");
-            addSidebarItem(sidebar, "USERS", "User Management");
             addSidebarItem(sidebar, "REPORTS", "Reports");
+            if (isSystemAdmin()) {
+                addSidebarItem(sidebar, "USERS", "User Management");
+            }
         } else if (isLecturer()) {
             addSidebarItem(sidebar, "STATISTICS", "Dashboard");
             addSidebarItem(sidebar, "LECTURER_COURSES", "My Courses & Grades");
@@ -377,11 +383,13 @@ public class DashboardFrame extends JFrame {
             menuEnrollments.add(itemNewEnrollment);
             menuBar.add(menuEnrollments);
 
-            JMenu menuUsers = createStyledMenu("System");
-            JMenuItem itemManageUsers = createMenuItem("User Management");
-            itemManageUsers.addActionListener(e -> showPanel("USERS"));
-            menuUsers.add(itemManageUsers);
-            menuBar.add(menuUsers);
+            if (isSystemAdmin()) {
+                JMenu menuUsers = createStyledMenu("System");
+                JMenuItem itemManageUsers = createMenuItem("User Management");
+                itemManageUsers.addActionListener(e -> showPanel("USERS"));
+                menuUsers.add(itemManageUsers);
+                menuBar.add(menuUsers);
+            }
 
             JMenu menuReports = createStyledMenu("Reports");
             JMenuItem itemStatistics = createMenuItem("Statistics");
@@ -458,6 +466,10 @@ public class DashboardFrame extends JFrame {
     }
 
     public void showPanel(String name) {
+        if ("USERS".equals(name) && !isSystemAdmin()) {
+            JOptionPane.showMessageDialog(this, "You do not have permission to access User Management.", "Access Denied", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         highlightSidebar(name);
 
         switch (name) {
@@ -515,7 +527,7 @@ public class DashboardFrame extends JFrame {
                     case "ENROLLMENTS":       return new EnrollmentPanel();
                     case "REPORTS":           return new ReportPanel();
                     case "STATISTICS":        return new StatisticsPanel();
-                    case "USERS":             return new UserPanel();
+                    case "USERS":             return new UserPanel(currentUser.getUserId());
                     case "LECTURER_COURSES":  return new LecturerCoursePanel(currentUser.getLecturerId());
                     case "STUDENT_ENROLL":    return new StudentEnrollPanel(currentUser.getStudentId());
                     default:                  return new JPanel();

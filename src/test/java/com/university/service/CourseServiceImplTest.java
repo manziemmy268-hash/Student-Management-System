@@ -60,7 +60,7 @@ class CourseServiceImplTest {
     @DisplayName("addCourse() returns true for a valid course")
     void addCourse_validCourse_returnsTrue() {
         Course course = buildCourse(0, "Linear Algebra", "MATH101");
-        when(courseDao.getAllCourses()).thenReturn(Collections.emptyList());
+        when(courseDao.isCodeDuplicate("MATH101", 0)).thenReturn(false);
         when(courseDao.addCourse(course)).thenReturn(true);
 
         boolean result = courseService.addCourse(course);
@@ -72,8 +72,7 @@ class CourseServiceImplTest {
     @Test
     @DisplayName("addCourse() throws DuplicateEntityException for duplicate course code")
     void addCourse_duplicateCode_throwsDuplicateEntityException() {
-        Course existing = buildCourse(1, "Data Structures", "CS201");
-        when(courseDao.getAllCourses()).thenReturn(Arrays.asList(existing));
+        when(courseDao.isCodeDuplicate("CS201", 0)).thenReturn(true);
 
         Course duplicate = buildCourse(0, "Advanced Data Structures", "CS201");
 
@@ -147,8 +146,7 @@ class CourseServiceImplTest {
     @Test
     @DisplayName("isCodeDuplicate() returns true when code exists with different id")
     void isCodeDuplicate_existingCode_returnsTrue() {
-        Course existing = buildCourse(1, "Data Structures", "CS201");
-        when(courseDao.getAllCourses()).thenReturn(Arrays.asList(existing));
+        when(courseDao.isCodeDuplicate("CS201", 0)).thenReturn(true);
 
         boolean result = courseService.isCodeDuplicate("CS201", 0);
 
@@ -158,8 +156,7 @@ class CourseServiceImplTest {
     @Test
     @DisplayName("isCodeDuplicate() returns true for different id with same code")
     void isCodeDuplicate_differentId_returnsTrue() {
-        Course existing = buildCourse(5, "Data Structures", "CS201");
-        when(courseDao.getAllCourses()).thenReturn(Arrays.asList(existing));
+        when(courseDao.isCodeDuplicate("CS201", 10)).thenReturn(true);
 
         boolean result = courseService.isCodeDuplicate("CS201", 10);
 
@@ -169,8 +166,7 @@ class CourseServiceImplTest {
     @Test
     @DisplayName("isCodeDuplicate() returns false when no duplicate exists")
     void isCodeDuplicate_noDuplicate_returnsFalse() {
-        Course existing = buildCourse(1, "Data Structures", "CS201");
-        when(courseDao.getAllCourses()).thenReturn(Arrays.asList(existing));
+        when(courseDao.isCodeDuplicate("MATH101", 0)).thenReturn(false);
 
         boolean result = courseService.isCodeDuplicate("MATH101", 0);
 

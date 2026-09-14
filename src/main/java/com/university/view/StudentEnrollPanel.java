@@ -1,5 +1,6 @@
 package com.university.view;
 
+import com.university.dao.LookupDao;
 import com.university.exception.ValidationException;
 import com.university.model.Course;
 import com.university.model.Enrollment;
@@ -20,6 +21,7 @@ import java.awt.*;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public class StudentEnrollPanel extends JPanel {
 
@@ -28,6 +30,7 @@ public class StudentEnrollPanel extends JPanel {
     private final int studentId;
     private final CourseService courseService = new CourseServiceImpl();
     private final EnrollmentService enrollmentService = new EnrollmentServiceImpl();
+    private final LookupDao lookupDao = new LookupDao();
 
     private JTable coursesTable;
     private DefaultTableModel coursesTableModel;
@@ -38,10 +41,6 @@ public class StudentEnrollPanel extends JPanel {
     private JLabel lblEnrollmentSummary;
 
     private JTabbedPane tabbedPane;
-
-    private static final String[] GRADE_OPTIONS = {"", "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"};
-    private static final String[] SEMESTER_OPTIONS = {"January Intake", "Summer", "September"};
-    private static final String[] YEAR_OPTIONS = {"2024", "2025", "2026"};
 
     public StudentEnrollPanel(int studentId) {
         this.studentId = studentId;
@@ -167,9 +166,13 @@ public class StudentEnrollPanel extends JPanel {
 
     private void loadCourses() {
         new SwingWorker<List<Course>, Void>() {
+            private Map<Integer, Integer> courseCounts = java.util.Collections.emptyMap();
+
             @Override
             protected List<Course> doInBackground() {
-                return courseService.getAvailableCourses();
+                List<Course> courses = courseService.getAvailableCourses();
+                courseCounts = enrollmentService.getEnrollmentCountsByCourse();
+                return courses;
             }
 
             @Override
@@ -178,7 +181,7 @@ public class StudentEnrollPanel extends JPanel {
                     List<Course> courses = get();
                     coursesTableModel.setRowCount(0);
                     for (Course c : courses) {
-                        int enrolled = enrollmentService.getEnrollmentCountByCourse(c.getCourseId());
+                        int enrolled = courseCounts.getOrDefault(c.getCourseId(), 0);
                         coursesTableModel.addRow(new Object[]{
                                 c.getCourseId(),
                                 c.getCourseCode(),
@@ -287,8 +290,8 @@ public class StudentEnrollPanel extends JPanel {
         JDialog dialog = createDialog("Enroll in " + courseName, 450, 300);
         JPanel form = createFormPanel();
 
-        JComboBox<String> cmbSemester = new JComboBox<>(SEMESTER_OPTIONS);
-        JComboBox<String> cmbYear = new JComboBox<>(YEAR_OPTIONS);
+        JComboBox<String> cmbSemester = new JComboBox<>(lookupDao.getOptionsArray("semester"));
+        JComboBox<String> cmbYear = new JComboBox<>(lookupDao.getOptionsArray("academic_year"));
 
         addFormRow(form, 0, "Semester *:", cmbSemester);
         addFormRow(form, 1, "Academic Year *:", cmbYear);
@@ -311,12 +314,12 @@ public class StudentEnrollPanel extends JPanel {
                 return;
             }
 
-            if (enrollmentService.isDuplicateEnrollment(studentId, courseId, semester, academicYear, -1)) {
-                JOptionPane.showMessageDialog(dialog, "You are already enrolled in this course for " + semester + " " + academicYear + ".", "Duplicate Enrollment", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
             try {
+                if (enrollmentService.isDuplicateEnrollment(studentId, courseId, semester, academicYear, -1)) {
+                    JOptionPane.showMessageDialog(dialog, "You are already enrolled in this course for " + semester + " " + academicYear + ".", "Duplicate Enrollment", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
                 Enrollment enrollment = new Enrollment();
                 enrollment.setStudentId(studentId);
                 enrollment.setCourseId(courseId);

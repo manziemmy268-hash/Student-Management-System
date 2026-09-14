@@ -122,8 +122,6 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     public boolean isCodeDuplicate(String courseCode, int excludeId) {
-        List<Course> courses = getAllCourses();
-        return courses.stream()
-                .anyMatch(c -> c.getCourseCode().equalsIgnoreCase(courseCode) && c.getCourseId() != excludeId);
+        return courseDao.isCodeDuplicate(courseCode, excludeId);
     }
 }

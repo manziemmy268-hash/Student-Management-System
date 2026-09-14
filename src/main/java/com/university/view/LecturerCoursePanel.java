@@ -13,6 +13,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
 
 public class LecturerCoursePanel extends JPanel {
 
@@ -165,16 +166,20 @@ public class LecturerCoursePanel extends JPanel {
         refreshButton.setEnabled(false);
 
         new SwingWorker<List<Course>, Void>() {
+            private Map<Integer, Integer> courseCounts = java.util.Collections.emptyMap();
+
             @Override
             protected List<Course> doInBackground() {
-                return courseService.getCoursesByLecturer(lecturerId);
+                List<Course> courses = courseService.getCoursesByLecturer(lecturerId);
+                courseCounts = enrollmentService.getEnrollmentCountsByCourse();
+                return courses;
             }
 
             @Override
             protected void done() {
                 try {
                     currentCourses = get();
-                    populateCourseTable();
+                    populateCourseTable(courseCounts);
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(LecturerCoursePanel.this,
                             "Error loading courses: " + e.getMessage(),
@@ -187,11 +192,11 @@ public class LecturerCoursePanel extends JPanel {
         }.execute();
     }
 
-    private void populateCourseTable() {
+    private void populateCourseTable(Map<Integer, Integer> counts) {
         courseTableModel.setRowCount(0);
         if (currentCourses != null) {
             for (Course course : currentCourses) {
-                int enrolled = enrollmentService.getEnrollmentCountByCourse(course.getCourseId());
+                int enrolled = counts.getOrDefault(course.getCourseId(), 0);
                 String enrolledMax = enrolled + "/" + course.getMaxEnrollment();
                 courseTableModel.addRow(new Object[]{
                         course.getCourseId(),
@@ -205,6 +210,26 @@ public class LecturerCoursePanel extends JPanel {
             }
             courseCountLabel.setText(currentCourses.size() + " courses assigned");
         }
+    }
+
+    private void refreshCourseCounts() {
+        new SwingWorker<Map<Integer, Integer>, Void>() {
+            @Override
+            protected Map<Integer, Integer> doInBackground() {
+                return enrollmentService.getEnrollmentCountsByCourse();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    populateCourseTable(get());
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(LecturerCoursePanel.this,
+                            "Error refreshing course counts: " + e.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
     }
 
     private void onCourseSelected() {
@@ -377,7 +402,7 @@ public class LecturerCoursePanel extends JPanel {
                         if (selectedRow >= 0) {
                             int courseId = (int) courseTableModel.getValueAt(selectedRow, 0);
                             loadEnrollments(courseId);
-                            populateCourseTable();
+                            refreshCourseCounts();
                         }
                     } else {
                         JOptionPane.showMessageDialog(LecturerCoursePanel.this,

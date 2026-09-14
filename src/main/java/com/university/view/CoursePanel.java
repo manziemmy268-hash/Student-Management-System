@@ -12,6 +12,7 @@ import com.university.service.DepartmentServiceImpl;
 import com.university.service.LecturerService;
 import com.university.service.LecturerServiceImpl;
 import com.university.utility.Constants;
+import com.university.utility.ValidationUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,6 +222,14 @@ public class CoursePanel extends JPanel {
 
         btnSave.addActionListener(e -> {
             try {
+                if (!ValidationUtil.isValidCredits(txtCredits.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Credits must be a whole number between 1 and 20.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.isValidPositiveInt(txtMax.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Max Enrollment must be a positive whole number.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 Course course = new Course();
                 course.setCourseName(txtName.getText().trim());
                 course.setCourseCode(txtCode.getText().trim());
@@ -281,6 +290,14 @@ public class CoursePanel extends JPanel {
         Constants.styleButton(btnCancel, new Color(108, 117, 125));
         btnUpdate.addActionListener(e -> {
             try {
+                if (!ValidationUtil.isValidCredits(txtCredits.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Credits must be a whole number between 1 and 20.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!ValidationUtil.isValidPositiveInt(txtMax.getText().trim())) {
+                    JOptionPane.showMessageDialog(dialog, "Max Enrollment must be a positive whole number.", "Validation", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 course.setCourseName(txtName.getText().trim());
                 course.setCourseCode(txtCode.getText().trim());
                 course.setCredits(Integer.parseInt(txtCredits.getText().trim()));

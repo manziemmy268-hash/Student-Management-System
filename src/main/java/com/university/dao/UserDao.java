@@ -1,6 +1,7 @@
 package com.university.dao;
 
 import com.university.database.SessionFactoryManager;
+import com.university.exception.DataAccessException;
 import com.university.model.User;
 
 import org.hibernate.Session;
@@ -101,12 +102,16 @@ public class UserDao {
                 tx.commit();
                 return null;
             } catch (Exception e) {
-                tx.rollback();
+                try {
+                    tx.rollback();
+                } catch (Exception rollbackEx) {
+                    logger.warn("Authentication transaction rollback failed", rollbackEx);
+                }
                 throw e;
             }
         } catch (Exception e) {
             logger.error("Authentication query failed for user: {}", username, e);
-            return null;
+            throw new DataAccessException("Failed to authenticate user", e);
         }
     }
 
@@ -116,7 +121,7 @@ public class UserDao {
             return new ArrayList<>(query.list());
         } catch (Exception e) {
             logger.error("Failed to retrieve all users", e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to retrieve all users", e);
         }
     }
 
@@ -125,7 +130,7 @@ public class UserDao {
             return session.get(User.class, id);
         } catch (Exception e) {
             logger.error("Failed to retrieve user by id: {}", id, e);
-            return null;
+            throw new DataAccessException("Failed to retrieve user by id: " + id, e);
         }
     }
 
@@ -144,9 +149,13 @@ public class UserDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to add user: {}", user.getUsername(), e);
-            return false;
+            throw new DataAccessException("Failed to add user: " + user.getUsername(), e);
         }
     }
 
@@ -158,9 +167,13 @@ public class UserDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to update user id: {}", user.getUserId(), e);
-            return false;
+            throw new DataAccessException("Failed to update user id: " + user.getUserId(), e);
         }
     }
 
@@ -176,9 +189,13 @@ public class UserDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to update password for user id: {}", userId, e);
-            return false;
+            throw new DataAccessException("Failed to update password for user id: " + userId, e);
         }
     }
 
@@ -195,9 +212,13 @@ public class UserDao {
             tx.rollback();
             return false;
         } catch (Exception e) {
-            if (tx != null) tx.rollback();
+            try {
+                if (tx != null) tx.rollback();
+            } catch (Exception rollbackEx) {
+                logger.warn("Transaction rollback failed", rollbackEx);
+            }
             logger.error("Failed to delete user id: {}", userId, e);
-            return false;
+            throw new DataAccessException("Failed to delete user id: " + userId, e);
         }
     }
 
@@ -207,7 +228,18 @@ public class UserDao {
             return query.getSingleResult().intValue();
         } catch (Exception e) {
             logger.error("Failed to get user count", e);
-            return 0;
+            throw new DataAccessException("Failed to get user count", e);
+        }
+    }
+
+    public int getRoleCount(String role) {
+        try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
+            Query<Long> query = session.createQuery("SELECT COUNT(u) FROM User u WHERE u.role = :role", Long.class);
+            query.setParameter("role", role);
+            return query.getSingleResult().intValue();
+        } catch (Exception e) {
+            logger.error("Failed to count users with role: {}", role, e);
+            throw new DataAccessException("Failed to count users with role: " + role, e);
         }
     }
 
@@ -220,7 +252,7 @@ public class UserDao {
             return query.getSingleResult() > 0;
         } catch (Exception e) {
             logger.error("Failed to check username duplicate", e);
-            return false;
+            throw new DataAccessException("Failed to check username duplicate", e);
         }
     }
 

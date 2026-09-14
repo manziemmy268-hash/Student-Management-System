@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 public class EnrollmentServiceImpl implements EnrollmentService {
 
@@ -64,17 +65,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     public boolean isDuplicateEnrollment(int studentId, int courseId, String semester, String academicYear, int excludeId) {
-        List<Enrollment> enrollments = getAllEnrollments();
-        for (Enrollment e : enrollments) {
-            if (e.getStudentId() == studentId
-                    && e.getCourseId() == courseId
-                    && e.getSemester().equals(semester)
-                    && e.getAcademicYear().equals(academicYear)
-                    && e.getEnrollmentId() != excludeId) {
-                return true;
-            }
-        }
-        return false;
+        return enrollmentDao.isDuplicateEnrollment(studentId, courseId, semester, academicYear, excludeId);
     }
 
     @Override
@@ -113,5 +104,10 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Override
     public int getEnrollmentCountByCourse(int courseId) {
         return enrollmentDao.getEnrollmentCountByCourse(courseId);
+    }
+
+    @Override
+    public Map<Integer, Integer> getEnrollmentCountsByCourse() {
+        return enrollmentDao.getEnrollmentCountsByCourse();
     }
 }

@@ -123,6 +123,34 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("deleteUser() throws ValidationException for the last admin account")
+    void deleteUser_lastAdmin_throwsValidationException() {
+        User admin = buildUser(1, "admin", "System Admin", "Admin");
+        when(userDao.getUserById(1)).thenReturn(admin);
+        when(userDao.getRoleCount("Admin")).thenReturn(1);
+
+        ValidationException ex = assertThrows(ValidationException.class,
+                () -> userService.deleteUser(1));
+
+        assertTrue(ex.getMessage().contains("last admin"));
+        verify(userDao, never()).deleteUser(1);
+    }
+
+    @Test
+    @DisplayName("deleteUser() allows deleting an admin when other admins remain")
+    void deleteUser_adminWithOthers_deletes() {
+        User admin = buildUser(1, "admin", "System Admin", "Admin");
+        when(userDao.getUserById(1)).thenReturn(admin);
+        when(userDao.getRoleCount("Admin")).thenReturn(2);
+        when(userDao.deleteUser(1)).thenReturn(true);
+
+        boolean result = userService.deleteUser(1);
+
+        assertTrue(result);
+        verify(userDao, times(1)).deleteUser(1);
+    }
+
+    @Test
     @DisplayName("getUserCount() delegates to userDao")
     void getUserCount_delegatesToDao() {
         when(userDao.getUserCount()).thenReturn(5);

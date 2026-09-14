@@ -108,13 +108,11 @@ class LoginControllerTest {
     }
 
     @Test
-    @DisplayName("authenticate() returns false when service throws exception")
-    void authenticate_serviceThrowsException_returnsFalse() {
+    @DisplayName("authenticate() propagates exceptions instead of hiding them")
+    void authenticate_serviceThrowsException_propagates() {
         when(authService.authenticate("admin", "pass")).thenThrow(new RuntimeException("DB error"));
 
-        boolean result = loginController.authenticate("admin", "pass");
-
-        assertFalse(result);
+        assertThrows(RuntimeException.class, () -> loginController.authenticate("admin", "pass"));
         assertNull(loginController.getCurrentUser());
     }
 

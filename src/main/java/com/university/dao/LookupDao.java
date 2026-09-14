@@ -1,6 +1,7 @@
 package com.university.dao;
 
 import com.university.database.SessionFactoryManager;
+import com.university.exception.DataAccessException;
 
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -23,7 +24,7 @@ public class LookupDao {
             return new ArrayList<>(query.getResultList());
         } catch (Exception e) {
             logger.error("Failed to retrieve lookup options for category: {}", category, e);
-            return new ArrayList<>();
+            throw new DataAccessException("Failed to retrieve lookup options for category: " + category, e);
         }
     }
 

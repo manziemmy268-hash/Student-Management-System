@@ -58,7 +58,7 @@ class DepartmentServiceImplTest {
     @DisplayName("addDepartment() returns true for a valid department")
     void addDepartment_validDepartment_returnsTrue() {
         Department department = buildDepartment(0, "Physics", "PHYS");
-        when(departmentDao.getAllDepartments()).thenReturn(Collections.emptyList());
+        when(departmentDao.isCodeDuplicate("PHYS", -1)).thenReturn(false);
         when(departmentDao.addDepartment(department)).thenReturn(true);
 
         boolean result = departmentService.addDepartment(department);
@@ -70,8 +70,7 @@ class DepartmentServiceImplTest {
     @Test
     @DisplayName("addDepartment() throws DuplicateEntityException for duplicate code")
     void addDepartment_duplicateCode_throwsDuplicateEntityException() {
-        Department existing = buildDepartment(1, "Computer Science", "CS");
-        when(departmentDao.getAllDepartments()).thenReturn(Arrays.asList(existing));
+        when(departmentDao.isCodeDuplicate("CS", -1)).thenReturn(true);
 
         Department duplicate = buildDepartment(0, "Cyber Security", "CS");
 
@@ -87,7 +86,7 @@ class DepartmentServiceImplTest {
         Department department = buildDepartment(0, "Physics", "PHYS");
         department.setLocation("Building <script>alert('xss')</script>");
         department.setPhone("+1234567890");
-        when(departmentDao.getAllDepartments()).thenReturn(Collections.emptyList());
+        when(departmentDao.isCodeDuplicate("PHYS", -1)).thenReturn(false);
         when(departmentDao.addDepartment(any(Department.class))).thenReturn(true);
 
         departmentService.addDepartment(department);
@@ -100,7 +99,7 @@ class DepartmentServiceImplTest {
     @DisplayName("updateDepartment() returns true for a valid update")
     void updateDepartment_validDepartment_returnsTrue() {
         Department department = buildDepartment(1, "Computer Science", "CS");
-        when(departmentDao.getAllDepartments()).thenReturn(Arrays.asList(department));
+        when(departmentDao.isCodeDuplicate("CS", 1)).thenReturn(false);
         when(departmentDao.updateDepartment(department)).thenReturn(true);
 
         boolean result = departmentService.updateDepartment(department);
@@ -112,9 +111,7 @@ class DepartmentServiceImplTest {
     @Test
     @DisplayName("updateDepartment() throws DuplicateEntityException for duplicate code with different id")
     void updateDepartment_duplicateCode_throwsDuplicateEntityException() {
-        Department existing = buildDepartment(1, "Computer Science", "CS");
-        Department other = buildDepartment(2, "Cyber Security", "CS");
-        when(departmentDao.getAllDepartments()).thenReturn(Arrays.asList(existing, other));
+        when(departmentDao.isCodeDuplicate("CS", 2)).thenReturn(true);
 
         Department duplicate = buildDepartment(2, "Cyber Security", "CS");
 
@@ -128,7 +125,7 @@ class DepartmentServiceImplTest {
     @DisplayName("updateDepartment() allows same code for same id")
     void updateDepartment_sameIdSameCode_doesNotThrow() {
         Department existing = buildDepartment(1, "Computer Science", "CS");
-        when(departmentDao.getAllDepartments()).thenReturn(Arrays.asList(existing));
+        when(departmentDao.isCodeDuplicate("CS", 1)).thenReturn(false);
         when(departmentDao.updateDepartment(existing)).thenReturn(true);
 
         boolean result = departmentService.updateDepartment(existing);
@@ -190,8 +187,7 @@ class DepartmentServiceImplTest {
     @Test
     @DisplayName("isCodeDuplicate() returns true when code exists with different id")
     void isCodeDuplicate_existingCode_returnsTrue() {
-        Department existing = buildDepartment(1, "Computer Science", "CS");
-        when(departmentDao.getAllDepartments()).thenReturn(Arrays.asList(existing));
+        when(departmentDao.isCodeDuplicate("CS", 0)).thenReturn(true);
 
         boolean result = departmentService.isCodeDuplicate("CS", 0);
 
@@ -201,8 +197,7 @@ class DepartmentServiceImplTest {
     @Test
     @DisplayName("isCodeDuplicate() returns false for same id with same code")
     void isCodeDuplicate_sameId_returnsFalse() {
-        Department existing = buildDepartment(1, "Computer Science", "CS");
-        when(departmentDao.getAllDepartments()).thenReturn(Arrays.asList(existing));
+        when(departmentDao.isCodeDuplicate("CS", 1)).thenReturn(false);
 
         boolean result = departmentService.isCodeDuplicate("CS", 1);
 
@@ -212,8 +207,7 @@ class DepartmentServiceImplTest {
     @Test
     @DisplayName("isCodeDuplicate() returns false when no duplicate exists")
     void isCodeDuplicate_noDuplicate_returnsFalse() {
-        Department existing = buildDepartment(1, "Computer Science", "CS");
-        when(departmentDao.getAllDepartments()).thenReturn(Arrays.asList(existing));
+        when(departmentDao.isCodeDuplicate("MATH", 0)).thenReturn(false);
 
         boolean result = departmentService.isCodeDuplicate("MATH", 0);
 

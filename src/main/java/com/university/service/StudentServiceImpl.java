@@ -6,6 +6,7 @@ import com.university.exception.ValidationException;
 import com.university.model.Student;
 import com.university.utility.ValidationUtil;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,8 @@ import java.util.List;
 public class StudentServiceImpl implements StudentService {
 
     private static final Logger logger = LoggerFactory.getLogger(StudentServiceImpl.class);
+    private static final String DEFAULT_INITIAL_PASSWORD = "student123";
+
     private final StudentDao studentDao;
 
     public StudentServiceImpl() {
@@ -49,6 +52,10 @@ public class StudentServiceImpl implements StudentService {
         student.setLastName(ValidationUtil.sanitizeInput(student.getLastName()));
         student.setEmail(ValidationUtil.sanitizeInput(student.getEmail()));
         student.setPhone(ValidationUtil.sanitizeInput(student.getPhone()));
+
+        if (student.getPassword() == null || student.getPassword().isEmpty()) {
+            student.setPassword(BCrypt.hashpw(DEFAULT_INITIAL_PASSWORD, BCrypt.gensalt()));
+        }
 
         boolean result = studentDao.addStudent(student);
         if (result) {
@@ -128,8 +135,6 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public boolean isEmailDuplicate(String email, int excludeId) {
-        List<Student> students = getAllStudents();
-        return students.stream()
-                .anyMatch(s -> s.getEmail().equalsIgnoreCase(email) && s.getStudentId() != excludeId);
+        return studentDao.isEmailDuplicate(email, excludeId);
     }
 }

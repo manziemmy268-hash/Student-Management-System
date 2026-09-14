@@ -6,6 +6,7 @@ import com.university.exception.ValidationException;
 import com.university.model.Lecturer;
 import com.university.utility.ValidationUtil;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,8 @@ import java.util.List;
 public class LecturerServiceImpl implements LecturerService {
 
     private static final Logger logger = LoggerFactory.getLogger(LecturerServiceImpl.class);
+    private static final String DEFAULT_INITIAL_PASSWORD = "lecturer123";
+
     private final LecturerDao lecturerDao;
 
     public LecturerServiceImpl() {
@@ -49,6 +52,10 @@ public class LecturerServiceImpl implements LecturerService {
         lecturer.setLastName(ValidationUtil.sanitizeInput(lecturer.getLastName()));
         lecturer.setEmail(ValidationUtil.sanitizeInput(lecturer.getEmail()));
         lecturer.setPhone(ValidationUtil.sanitizeInput(lecturer.getPhone()));
+
+        if (lecturer.getPassword() == null || lecturer.getPassword().isEmpty()) {
+            lecturer.setPassword(BCrypt.hashpw(DEFAULT_INITIAL_PASSWORD, BCrypt.gensalt()));
+        }
 
         boolean result = lecturerDao.addLecturer(lecturer);
         if (result) {
@@ -128,8 +135,6 @@ public class LecturerServiceImpl implements LecturerService {
 
     @Override
     public boolean isEmailDuplicate(String email, int excludeId) {
-        List<Lecturer> lecturers = getAllLecturers();
-        return lecturers.stream()
-                .anyMatch(l -> l.getEmail().equalsIgnoreCase(email) && l.getLecturerId() != excludeId);
+        return lecturerDao.isEmailDuplicate(email, excludeId);
     }
 }
