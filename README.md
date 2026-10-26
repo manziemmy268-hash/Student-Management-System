@@ -74,22 +74,42 @@ mvn clean package -Pdemo -DskipTests
 java -jar target/student-lecturer-management-1.0-SNAPSHOT.jar
 ```
 
-### Login Credentials (Demo)
+### Web Mode (Demo Database)
 
-| Role      | Username / Email                | Password     |
-|-----------|---------------------------------|--------------|
-| Admin     | `admin`                         | `admin123`   |
-| Staff     | `staff1`                        | `staff123`   |
-| Lecturer  | `lecturer1`                     | `lecturer123`|
-| Student   | `david.nsengimana@student.rw`   | `student123` |
+The project now includes a Spring Boot web entry point while retaining the desktop application.
+
+```bash
+mvn -Pdemo spring-boot:run "-Dspring-boot.run.main-class=com.university.web.WebApplication"
+```
+
+Open `http://localhost:8080` in a browser. Demo passwords are never stored in the repository.
+Set them in the process environment before starting the application:
+
+```powershell
+$env:DEMO_ADMIN_PASSWORD = '<choose-a-password>'
+$env:DEMO_STAFF_PASSWORD = '<choose-a-password>'
+$env:DEMO_LECTURER_PASSWORD = '<choose-a-password>'
+$env:DEMO_STUDENT_PASSWORD = '<choose-a-password>'
+.\mvnw.cmd -Pdemo spring-boot:run "-Dspring-boot.run.main-class=com.university.web.WebApplication"
+```
+
+The seeded usernames remain `admin`, `staff1`, `lecturer1`, and
+`david.nsengimana@student.rw`; their passwords come only from the environment.
+
+For account creation without an explicit password, set `INITIAL_ACCOUNT_PASSWORD` as well.
 
 ### Production Mode (MySQL Required)
 
 ```bash
-# 1. Create the database
-mysql -u root -p < sql/university_db.sql
+# 1. Create the database with an administrator-managed MySQL account
+mysql -u <db-admin-user> -p < sql/university_db.sql
 
-# 2. Build and run (connects to MySQL on localhost)
+# 2. Supply runtime database settings
+$env:JDBC_URL = 'jdbc:mysql://<host>:3306/university_db?sslMode=PREFERRED&serverTimezone=UTC'
+$env:DB_USERNAME = '<application-db-user>'
+$env:DB_PASSWORD = '<application-db-password>'
+
+# 3. Build and run
 mvn clean package -DskipTests
 java -jar target/student-lecturer-management-1.0-SNAPSHOT.jar
 ```

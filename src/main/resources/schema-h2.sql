@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS lecturers (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
+    password VARCHAR(100),
     phone VARCHAR(20),
     hire_date DATE,
     department_id INT,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS students (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
+    password VARCHAR(100),
     phone VARCHAR(20),
     date_of_birth DATE,
     gender VARCHAR(10) NOT NULL CHECK (gender IN ('Male', 'Female', 'Other')),
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS system_lookup (
 CREATE TABLE IF NOT EXISTS users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(100) NOT NULL,
+    password VARCHAR(100),
     full_name VARCHAR(100) NOT NULL,
     role VARCHAR(20) DEFAULT 'Staff' CHECK (role IN ('Admin', 'Staff', 'Lecturer')),
     last_login TIMESTAMP NULL,
@@ -102,28 +102,28 @@ INSERT INTO departments (department_name, department_code, location, phone) VALU
 ('Business Administration', 'BA', 'Building C, Room 301', '+250788100500');
 
 INSERT INTO lecturers (first_name, last_name, email, password, phone, hire_date, department_id, lecturer_rank) VALUES
-('Jean', 'Mugabo', 'jean.mugabo@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200101', '2018-09-01', 1, 'Professor'),
-('Marie', 'Uwimana', 'marie.uwimana@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200102', '2019-01-15', 1, 'Associate Professor'),
-('Patrick', 'Niyonzima', 'patrick.niyonzima@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200103', '2017-06-20', 2, 'Professor'),
-('Claire', 'Ingabire', 'claire.ingabire@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200104', '2020-03-10', 3, 'Lecturer'),
-('Emmanuel', 'Hakizimana', 'emmanuel.hakizimana@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200105', '2016-11-01', 4, 'Senior Lecturer'),
-('Diane', 'Mukamana', 'diane.mukamana@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200106', '2021-02-01', 5, 'Lecturer'),
-('Robert', 'Bizimana', 'robert.bizimana@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200107', '2015-08-15', 2, 'Associate Professor'),
-('Ange', 'Iradukunda', 'ange.iradukunda@university.rw', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', '+250788200108', '2022-01-10', 3, 'Assistant Lecturer');
+('Jean', 'Mugabo', 'jean.mugabo@university.rw', NULL, '+250788200101', '2018-09-01', 1, 'Professor'),
+('Marie', 'Uwimana', 'marie.uwimana@university.rw', NULL, '+250788200102', '2019-01-15', 1, 'Associate Professor'),
+('Patrick', 'Niyonzima', 'patrick.niyonzima@university.rw', NULL, '+250788200103', '2017-06-20', 2, 'Professor'),
+('Claire', 'Ingabire', 'claire.ingabire@university.rw', NULL, '+250788200104', '2020-03-10', 3, 'Lecturer'),
+('Emmanuel', 'Hakizimana', 'emmanuel.hakizimana@university.rw', NULL, '+250788200105', '2016-11-01', 4, 'Senior Lecturer'),
+('Diane', 'Mukamana', 'diane.mukamana@university.rw', NULL, '+250788200106', '2021-02-01', 5, 'Lecturer'),
+('Robert', 'Bizimana', 'robert.bizimana@university.rw', NULL, '+250788200107', '2015-08-15', 2, 'Associate Professor'),
+('Ange', 'Iradukunda', 'ange.iradukunda@university.rw', NULL, '+250788200108', '2022-01-10', 3, 'Assistant Lecturer');
 
 INSERT INTO students (first_name, last_name, email, password, phone, date_of_birth, gender, enrollment_date, department_id, gpa, status) VALUES
-('David', 'Nsengimana', 'david.nsengimana@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300101', '2001-05-15', 'Male', '2022-09-01', 1, 3.75, 'Active'),
-('Grace', 'Uwera', 'grace.uwera@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300102', '2000-08-22', 'Female', '2022-09-01', 1, 3.90, 'Active'),
-('Samuel', 'Nshimiyimana', 'samuel.nshimiyimana@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300103', '2001-03-10', 'Male', '2022-09-01', 2, 3.20, 'Active'),
-('Esperance', 'Kayitesi', 'esperance.kayitesi@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300104', '1999-12-05', 'Female', '2021-09-01', 3, 3.55, 'Active'),
-('Jean', 'Habimana', 'jean.habimana@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300105', '2002-01-20', 'Male', '2023-09-01', 4, 3.40, 'Active'),
-('Chantal', 'Nyirahabimana', 'chantal.nyirahabimana@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300106', '2000-07-18', 'Female', '2022-09-01', 1, 3.85, 'Active'),
-('Eric', 'Byiringiro', 'eric.byiringiro@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300107', '2001-09-30', 'Male', '2022-09-01', 5, 3.10, 'Active'),
-('Alice', 'Mukamponda', 'alice.mukamponda@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300108', '2000-04-12', 'Female', '2021-09-01', 2, 3.65, 'Active'),
-('Olivier', 'Ndayisaba', 'olivier.ndayisaba@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300109', '2002-06-25', 'Male', '2023-09-01', 4, 3.30, 'Active'),
-('Immaculee', 'Sindikubwabo', 'immaculee.sindikubwabo@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300110', '2001-11-08', 'Female', '2022-09-01', 3, 3.70, 'Active'),
-('Patrick', 'Rukundo', 'patrick.rukundo@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300111', '2000-02-14', 'Male', '2021-09-01', 1, 3.95, 'Active'),
-('Cecile', 'Maniragaba', 'cecile.maniragaba@student.rw', '$2a$10$4BLFqW8pB0Zf1L.CAuAj7O7SUk3slY03YtBCk52hSZgi.7hI8pOMe', '+250788300112', '2002-08-03', 'Female', '2023-09-01', 5, 3.50, 'Active');
+('David', 'Nsengimana', 'david.nsengimana@student.rw', NULL, '+250788300101', '2001-05-15', 'Male', '2022-09-01', 1, 3.75, 'Active'),
+('Grace', 'Uwera', 'grace.uwera@student.rw', NULL, '+250788300102', '2000-08-22', 'Female', '2022-09-01', 1, 3.90, 'Active'),
+('Samuel', 'Nshimiyimana', 'samuel.nshimiyimana@student.rw', NULL, '+250788300103', '2001-03-10', 'Male', '2022-09-01', 2, 3.20, 'Active'),
+('Esperance', 'Kayitesi', 'esperance.kayitesi@student.rw', NULL, '+250788300104', '1999-12-05', 'Female', '2021-09-01', 3, 3.55, 'Active'),
+('Jean', 'Habimana', 'jean.habimana@student.rw', NULL, '+250788300105', '2002-01-20', 'Male', '2023-09-01', 4, 3.40, 'Active'),
+('Chantal', 'Nyirahabimana', 'chantal.nyirahabimana@student.rw', NULL, '+250788300106', '2000-07-18', 'Female', '2022-09-01', 1, 3.85, 'Active'),
+('Eric', 'Byiringiro', 'eric.byiringiro@student.rw', NULL, '+250788300107', '2001-09-30', 'Male', '2022-09-01', 5, 3.10, 'Active'),
+('Alice', 'Mukamponda', 'alice.mukamponda@student.rw', NULL, '+250788300108', '2000-04-12', 'Female', '2021-09-01', 2, 3.65, 'Active'),
+('Olivier', 'Ndayisaba', 'olivier.ndayisaba@student.rw', NULL, '+250788300109', '2002-06-25', 'Male', '2023-09-01', 4, 3.30, 'Active'),
+('Immaculee', 'Sindikubwabo', 'immaculee.sindikubwabo@student.rw', NULL, '+250788300110', '2001-11-08', 'Female', '2022-09-01', 3, 3.70, 'Active'),
+('Patrick', 'Rukundo', 'patrick.rukundo@student.rw', NULL, '+250788300111', '2000-02-14', 'Male', '2021-09-01', 1, 3.95, 'Active'),
+('Cecile', 'Maniragaba', 'cecile.maniragaba@student.rw', NULL, '+250788300112', '2002-08-03', 'Female', '2023-09-01', 5, 3.50, 'Active');
 
 INSERT INTO courses (course_name, course_code, credits, department_id, lecturer_id, description, max_enrollment) VALUES
 ('Introduction to Programming', 'CS101', 3, 1, 1, 'Fundamental concepts of programming using Java', 60),
@@ -163,10 +163,10 @@ INSERT INTO enrollments (student_id, course_id, enrollment_date, semester, acade
 (12, 9, '2023-09-05', 'September', '2023', NULL, 'Enrolled');
 
 INSERT INTO users (username, password, full_name, role) VALUES
-('admin', '$2a$10$aa58R2hwVaITdWpCFSnrQud/0kJKJZkDIKpTzQA6Sd2jFRNeIN7P6', 'System Administrator', 'Admin'),
-('staff1', '$2a$10$ltEFMv5u3ZDIKAO7hEcMaOMi2xDcgG.TI2y92Xz68cZGvc1bvIjaq', 'John Staff', 'Staff'),
-('lecturer1', '$2a$10$wB9OPdErA5AWQ8XXXOf/mucZqX3b7PMWAXzP33b0lWQAB7UPsEU6K', 'Jean Mugabo', 'Lecturer'),
-('staff2', '$2a$10$ltEFMv5u3ZDIKAO7hEcMaOMi2xDcgG.TI2y92Xz68cZGvc1bvIjaq', 'Mary Staff', 'Staff');
+('admin', NULL, 'System Administrator', 'Admin'),
+('staff1', NULL, 'John Staff', 'Staff'),
+('lecturer1', NULL, 'Jean Mugabo', 'Lecturer'),
+('staff2', NULL, 'Mary Staff', 'Staff');
 
 INSERT INTO system_lookup (lookup_category, lookup_value, sort_order, is_active) VALUES
 ('gender', 'Male', 1, 1),

@@ -156,10 +156,10 @@ public class CourseDao {
 
     public List<Course> getAvailableCourses() {
         try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
-            NativeQuery<Course> query = session.createNativeQuery(
-                    "SELECT c.* FROM courses c " +
-                    "WHERE (SELECT COUNT(*) FROM enrollments e WHERE e.course_id = c.course_id " +
-                    "AND e.status = 'Enrolled') < c.max_enrollment ORDER BY c.course_id", Course.class);
+            Query<Course> query = session.createQuery(
+                "FROM Course c LEFT JOIN FETCH c.department LEFT JOIN FETCH c.lecturer " +
+                "WHERE (SELECT COUNT(e) FROM Enrollment e WHERE e.courseId = c.courseId " +
+                "AND e.status = 'Enrolled') < c.maxEnrollment ORDER BY c.courseId", Course.class);
             List<Course> courses = new ArrayList<>(query.getResultList());
             return courses;
         } catch (Exception e) {

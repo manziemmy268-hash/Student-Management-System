@@ -10,6 +10,8 @@ public interface EnrollmentService {
 
     List<Enrollment> getAllEnrollments();
 
+    Enrollment getEnrollmentById(int enrollmentId);
+
     List<Student> getAllStudents();
 
     List<Course> getAllCourses();

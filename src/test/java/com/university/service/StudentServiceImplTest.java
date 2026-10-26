@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,6 +28,14 @@ class StudentServiceImplTest {
 
     @InjectMocks
     private StudentServiceImpl studentService;
+
+    private String testPassword;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUpPassword() {
+        testPassword = UUID.randomUUID().toString();
+        System.setProperty("initial.account.password", testPassword);
+    }
 
     private Student buildStudent(int id, String firstName, String lastName, String email) {
         Student s = new Student();
@@ -82,7 +91,7 @@ class StudentServiceImplTest {
         assertTrue(result);
         assertNotNull(student.getPassword());
         assertTrue(student.getPassword().startsWith("$2a$"));
-        assertTrue(org.mindrot.jbcrypt.BCrypt.checkpw("student123", student.getPassword()));
+        assertTrue(org.mindrot.jbcrypt.BCrypt.checkpw(testPassword, student.getPassword()));
         verify(studentDao, times(1)).addStudent(student);
     }
 

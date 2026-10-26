@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -39,16 +40,18 @@ public class DBConnection {
             }
 
             String url = resolve(props, "db.url", "JDBC_URL", DEFAULT_MYSQL_URL);
-            String username = resolve(props, "db.username", "DB_USERNAME", "root");
-            String password = resolve(props, "db.password", "DB_PASSWORD", "");
+                String username = resolve(props, "db.username", "DB_USERNAME", null);
+                String password = resolve(props, "db.password", "DB_PASSWORD", null);
 
-            if (url.startsWith("jdbc:mysql://")
-                    && "root".equals(username) && password.isEmpty()) {
-                logger.warn("Using default MySQL credentials. Set db.properties, the {} system property, or "
-                        + "the JDBC_URL/DB_USERNAME/DB_PASSWORD environment variables.", "db.url");
-            }
+                if (isBlank(url) || isBlank(username) || password == null) {
+                throw new IllegalStateException("Database settings must be supplied through db.properties " +
+                    "or JDBC_URL, DB_USERNAME, and DB_PASSWORD environment variables");
+                }
 
             isH2 = url.contains(":h2:");
+                if (!isH2 && isBlank(password)) {
+                    throw new IllegalStateException("DB_PASSWORD must be set for MySQL connections");
+                }
 
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl(url);
@@ -99,6 +102,7 @@ public class DBConnection {
 
             if (tablesExist) {
                 logger.info("H2 schema already initialized.");
+                initializeH2Credentials();
                 return;
             }
 
@@ -124,12 +128,56 @@ public class DBConnection {
                     }
                 }
                 logger.info("H2 schema initialized with sample data.");
+                initializeH2Credentials();
             } else {
                 logger.error("schema-h2.sql not found on classpath");
             }
         } catch (SQLException e) {
             logger.error("Failed to initialize H2 schema", e);
         }
+    }
+
+    private static void initializeH2Credentials() {
+        String adminPassword = System.getenv("DEMO_ADMIN_PASSWORD");
+        String staffPassword = System.getenv("DEMO_STAFF_PASSWORD");
+        String lecturerPassword = System.getenv("DEMO_LECTURER_PASSWORD");
+        String studentPassword = System.getenv("DEMO_STUDENT_PASSWORD");
+        if (isBlank(adminPassword) || isBlank(staffPassword)
+                || isBlank(lecturerPassword) || isBlank(studentPassword)) {
+            logger.warn("Demo credentials are not initialized. Set DEMO_ADMIN_PASSWORD, " +
+                    "DEMO_STAFF_PASSWORD, DEMO_LECTURER_PASSWORD, and DEMO_STUDENT_PASSWORD.");
+            return;
+        }
+
+        String userSql = "UPDATE users SET password = ? WHERE username = ?";
+        String peopleSql = "UPDATE %s SET password = ?";
+        try (Connection connection = dataSource.getConnection();
+             java.sql.PreparedStatement userStatement = connection.prepareStatement(userSql);
+             java.sql.PreparedStatement studentStatement = connection.prepareStatement(
+                     String.format(peopleSql, "students"));
+             java.sql.PreparedStatement lecturerStatement = connection.prepareStatement(
+                     String.format(peopleSql, "lecturers"))) {
+            setCredential(userStatement, adminPassword, "admin");
+            setCredential(userStatement, staffPassword, "staff1");
+            setCredential(userStatement, staffPassword, "staff2");
+            setCredential(userStatement, lecturerPassword, "lecturer1");
+            userStatement.executeBatch();
+
+            studentStatement.setString(1, BCrypt.hashpw(studentPassword, BCrypt.gensalt()));
+            studentStatement.executeUpdate();
+            lecturerStatement.setString(1, BCrypt.hashpw(lecturerPassword, BCrypt.gensalt()));
+            lecturerStatement.executeUpdate();
+            logger.info("Demo credentials initialized from environment variables.");
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to initialize demo credentials", e);
+        }
+    }
+
+    private static void setCredential(java.sql.PreparedStatement statement, String password, String username)
+            throws SQLException {
+        statement.setString(1, BCrypt.hashpw(password, BCrypt.gensalt()));
+        statement.setString(2, username);
+        statement.addBatch();
     }
 
     private static String resolve(Properties props, String propKey, String envKey, String defaultValue) {
@@ -142,6 +190,10 @@ public class DBConnection {
             return envVal;
         }
         return props.getProperty(propKey, defaultValue);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     public static javax.sql.DataSource getDataSource() {

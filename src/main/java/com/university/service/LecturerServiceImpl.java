@@ -5,6 +5,7 @@ import com.university.exception.DuplicateEntityException;
 import com.university.exception.ValidationException;
 import com.university.model.Lecturer;
 import com.university.utility.ValidationUtil;
+import com.university.utility.InitialPasswordProvider;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
@@ -15,8 +16,6 @@ import java.util.List;
 public class LecturerServiceImpl implements LecturerService {
 
     private static final Logger logger = LoggerFactory.getLogger(LecturerServiceImpl.class);
-    private static final String DEFAULT_INITIAL_PASSWORD = "lecturer123";
-
     private final LecturerDao lecturerDao;
 
     public LecturerServiceImpl() {
@@ -54,7 +53,7 @@ public class LecturerServiceImpl implements LecturerService {
         lecturer.setPhone(ValidationUtil.sanitizeInput(lecturer.getPhone()));
 
         if (lecturer.getPassword() == null || lecturer.getPassword().isEmpty()) {
-            lecturer.setPassword(BCrypt.hashpw(DEFAULT_INITIAL_PASSWORD, BCrypt.gensalt()));
+            lecturer.setPassword(BCrypt.hashpw(InitialPasswordProvider.getRequired(), BCrypt.gensalt()));
         }
 
         boolean result = lecturerDao.addLecturer(lecturer);

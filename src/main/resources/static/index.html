@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>University Management</title>
+    <style>
+        :root { font-family: Georgia, 'Times New Roman', serif; color: #17202a; background: #e9eee8; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; background: linear-gradient(135deg, #e9eee8 0%, #f8f6ef 54%, #dce8ed 100%); }
+        button, input, select { font: inherit; }
+        button { border: 0; border-radius: 3px; padding: 10px 15px; color: white; background: #155e63; cursor: pointer; }
+        button:hover { background: #0f4549; }
+        button.secondary { background: #52616b; }
+        button.danger { background: #9f3a38; }
+        main { width: min(1180px, 100%); margin: 0 auto; padding: 28px; }
+        .panel { background: #fffdf8e8; border: 1px solid #c9d2cd; border-radius: 6px; box-shadow: 0 16px 40px #18323818; }
+        #login { max-width: 460px; margin: 10vh auto; padding: 36px; }
+        h1, h2 { margin: 0; font-weight: 500; letter-spacing: 0; }
+        h1 { font-size: 34px; }
+        h2 { font-size: 22px; }
+        p { line-height: 1.5; }
+        label { display: block; margin: 18px 0 6px; font: 600 12px system-ui, sans-serif; text-transform: uppercase; color: #52616b; }
+        input, select { width: 100%; padding: 11px 12px; border: 1px solid #b9c5c2; border-radius: 3px; background: white; color: #17202a; }
+        form button { width: 100%; margin-top: 22px; }
+        #loginError, #appError { color: #9f3a38; font: 14px system-ui, sans-serif; }
+        #loginError { display: none; }
+        #app { display: none; }
+        .topbar { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 20px 24px; margin-bottom: 20px; }
+        .topbar small { display: block; margin-top: 5px; font: 13px system-ui, sans-serif; color: #52616b; }
+        .topbar button { width: auto; }
+        .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tabs button { background: #d3dfdc; color: #17464a; }
+        .tabs button.active { background: #155e63; color: white; }
+        .view { display: none; padding: 24px; }
+        .view.active { display: block; }
+        .viewHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
+        .viewHeader button { width: auto; }
+        .tableWrap { overflow-x: auto; border: 1px solid #d5ddda; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px; font: 14px system-ui, sans-serif; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e1e6e3; white-space: nowrap; }
+        th { background: #eef3f0; color: #52616b; font-size: 11px; text-transform: uppercase; }
+        tr:last-child td { border-bottom: 0; }
+        .empty { color: #52616b; font: 14px system-ui, sans-serif; padding: 25px 0; }
+        .formGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 16px; }
+        #registrationForm { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; margin-top: 18px; }
+        .formGrid label { min-width: 0; }
+        .formGrid .wide { grid-column: span 2; }
+        .formActions { display: flex; gap: 10px; margin-top: 18px; }
+        .formActions button { width: auto; }
+        .switchButton { display: block; width: auto; margin: 14px 0 0; padding: 0; color: #155e63; background: transparent; font: 600 14px system-ui, sans-serif; text-decoration: underline; }
+        .switchButton:hover { color: #0f4549; background: transparent; }
+        details { width: min(100%, 780px); }
+        summary { cursor: pointer; color: #155e63; font: 600 14px system-ui, sans-serif; }
+        details[open] summary { margin-bottom: 12px; }
+        @media (max-width: 720px) {
+            main { padding: 14px; }
+            #login { margin: 4vh auto; padding: 24px; }
+            .topbar, .viewHeader { align-items: flex-start; flex-direction: column; }
+            .formGrid { grid-template-columns: 1fr; }
+            .formGrid .wide { grid-column: auto; }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section id="login" class="panel">
+        <h1>University Management</h1>
+        <p>Sign in to manage academic records and student progress.</p>
+        <form id="loginForm">
+            <label for="username">Username or email</label>
+            <input id="username" name="username" autocomplete="username" required>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="submit">Sign in</button>
+            <p id="loginError" role="alert"></p>
+            <button id="showRegistration" class="switchButton" type="button">Create a student account</button>
+        </form>
+        <div id="registrationPanel" hidden>
+            <div class="viewHeader"><h2>Create a student account</h2><button id="showLogin" class="switchButton" type="button">Back to sign in</button></div>
+            <form id="registrationForm" class="formGrid">
+                <label>First name<input name="firstName" required></label>
+                <label>Last name<input name="lastName" required></label>
+                <label>Email<input name="email" type="email" required></label>
+                <label>Password<input name="password" type="password" minlength="8" autocomplete="new-password" required></label>
+                <label>Phone<input name="phone"></label>
+                <label>Gender<select name="gender" required><option value="">Choose</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+                <label>Department<select id="registrationDepartment" name="departmentId" required><option value="">Loading departments...</option></select></label>
+                <label>Date of birth<input name="dateOfBirth" type="date"></label>
+                <label class="wide">Enrollment date<input name="enrollmentDate" type="date"></label>
+                <button class="wide" type="submit">Register and continue</button>
+                <p id="registrationError" class="wide" role="alert"></p>
+            </form>
+        </div>
+    </section>
+
+    <section id="app">
+        <header class="topbar panel">
+            <div><h1 id="welcome"></h1><small id="identity"></small></div>
+            <button id="logout" class="secondary">Sign out</button>
+        </header>
+        <nav id="tabs" class="tabs" aria-label="Application sections"></nav>
+        <p id="appError" role="alert"></p>
+        <section id="view" class="panel">
+            <div id="studentsView" class="view"></div>
+            <div id="coursesView" class="view"></div>
+            <div id="departmentsView" class="view"></div>
+            <div id="lecturersView" class="view"></div>
+            <div id="usersView" class="view"></div>
+            <div id="enrollmentsView" class="view"></div>
+            <div id="rosterView" class="view"></div>
+        </section>
+    </section>
+</main>
+<script>
+    const login = document.getElementById('login');
+    const app = document.getElementById('app');
+    const loginError = document.getElementById('loginError');
+    const appError = document.getElementById('appError');
+    let csrfToken = null;
+    let currentUser = null;
+
+    async function request(url, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
+        const headers = { ...(options.headers || {}) };
+        if (method !== 'GET' && url !== '/api/auth/login' && url !== '/api/auth/register/student') {
+            if (!csrfToken) csrfToken = (await request('/api/auth/csrf')).token;
+            headers['X-XSRF-TOKEN'] = csrfToken;
+        }
+        const response = await fetch(url, { credentials: 'same-origin', ...options, headers });
+        if (!response.ok) {
+            if (response.status === 401) throw new Error('Your session has expired. Please sign in again.');
+            if (response.status === 403) throw new Error('You do not have permission for this action.');
+            const message = await response.text();
+            throw new Error(message || 'Request failed.');
+        }
+        return response.status === 204 ? null : response.json();
+    }
+
+    function showError(target, exception) {
+        target.textContent = exception.message;
+        target.style.display = 'block';
+    }
+
+    function makeTable(columns, rows, rowActions) {
+        if (!rows.length) return '<p class="empty">No records found.</p>';
+        const table = document.createElement('table');
+        const head = document.createElement('tr');
+        columns.forEach(column => { const cell = document.createElement('th'); cell.textContent = column.label; head.appendChild(cell); });
+        if (rowActions) { const cell = document.createElement('th'); cell.textContent = 'Actions'; head.appendChild(cell); }
+        table.createTHead().appendChild(head);
+        const body = table.createTBody();
+        rows.forEach(row => {
+            const tr = document.createElement('tr');
+            columns.forEach(column => { const cell = document.createElement('td'); cell.textContent = row[column.key] ?? '-'; tr.appendChild(cell); });
+            if (rowActions) { const cell = document.createElement('td'); cell.appendChild(rowActions(row)); tr.appendChild(cell); }
+            body.appendChild(tr);
+        });
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tableWrap';
+        wrapper.appendChild(table);
+        return wrapper;
+    }
+
+    function renderView(id, title, rows, columns, action, rowActions) {
+        const view = document.getElementById(id);
+        view.replaceChildren();
+        const header = document.createElement('div');
+        header.className = 'viewHeader';
+        header.innerHTML = `<h2>${title}</h2>`;
+        if (action) header.appendChild(action);
+        view.appendChild(header);
+        const content = makeTable(columns, rows, rowActions);
+        if (typeof content === 'string') { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No records found.'; view.appendChild(empty); }
+        else view.appendChild(content);
+    }
+
+    function addTab(key, label, load) {
+        const button = document.createElement('button');
+        button.textContent = label;
+        button.dataset.view = key;
+        button.addEventListener('click', () => { document.querySelectorAll('.tabs button').forEach(item => item.classList.remove('active')); button.classList.add('active'); document.querySelectorAll('.view').forEach(item => item.classList.remove('active')); document.getElementById(key + 'View').classList.add('active'); load(); });
+        document.getElementById('tabs').appendChild(button);
+    }
+
+    function adminCreateForm(type, reload, record) {
+        const specs = {
+            department: { label:'Add department', endpoint:'/api/admin/departments', fields:'<label>Name<input name="name" required></label><label>Code<input name="code" required></label><label>Location<input name="location"></label><label>Phone<input name="phone"></label>' },
+            student: { label:'Register student', endpoint:'/api/admin/students', fields:'<label>First name<input name="firstName" required></label><label>Last name<input name="lastName" required></label><label>Email<input name="email" type="email" required></label><label>Phone<input name="phone"></label><label>Gender<input name="gender" required></label><label>Enrollment date<input name="enrollmentDate" type="date" required></label><label>Department ID<input name="departmentId" type="number" min="1" required></label><label>GPA<input name="gpa" type="number" min="0" max="4" step="0.01" value="0"></label><label>Status<input name="status" value="Active" required></label><label>Password<input name="password" type="password" autocomplete="new-password"></label>' },
+            lecturer: { label:'Add lecturer', endpoint:'/api/admin/lecturers', fields:'<label>First name<input name="firstName" required></label><label>Last name<input name="lastName" required></label><label>Email<input name="email" type="email" required></label><label>Phone<input name="phone"></label><label>Hire date<input name="hireDate" type="date"></label><label>Department ID<input name="departmentId" type="number" min="1" required></label><label>Rank<input name="rank" required></label><label>Password<input name="password" type="password" autocomplete="new-password"></label>' },
+            course: { label:'Add course', endpoint:'/api/admin/courses', fields:'<label>Name<input name="name" required></label><label>Code<input name="code" required></label><label>Credits<input name="credits" type="number" min="1" required></label><label>Department ID<input name="departmentId" type="number" min="1" required></label><label>Lecturer ID<input name="lecturerId" type="number" min="1"></label><label>Max enrollment<input name="maxEnrollment" type="number" min="1" value="50" required></label><label class="wide">Description<input name="description"></label>' },
+            user: { label:'Add user', endpoint:'/api/admin/users', fields:'<label>Username<input name="username" required></label><label>Full name<input name="fullName" required></label><label>Role<select name="role"><option>Admin</option><option>Staff</option><option>Lecturer</option></select></label><label>Password<input name="password" type="password" autocomplete="new-password" required></label>' }
+        };
+        const spec = specs[type];
+        const details = document.createElement('details');
+        const summary = document.createElement('summary'); summary.textContent = record ? spec.label.replace('Add', 'Edit').replace('Register', 'Edit') : spec.label; details.appendChild(summary);
+        const form = document.createElement('form'); form.className = 'formGrid'; form.innerHTML = spec.fields + '<div class="formActions wide"><button type="submit">Save</button></div>';
+        if (record) { Object.keys(record).forEach(key => { if (form.elements[key]) form.elements[key].value = record[key] ?? ''; }); if (form.elements.password) form.elements.password.required = false; }
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const payload = Object.fromEntries(new FormData(form).entries());
+            ['departmentId', 'lecturerId', 'credits', 'maxEnrollment'].forEach(key => { if (key in payload) payload[key] = Number(payload[key]); });
+            if ('gpa' in payload) payload.gpa = Number(payload.gpa);
+            const endpoint = record ? spec.endpoint + '/' + record.id : spec.endpoint;
+            const method = record ? 'PUT' : 'POST';
+            try { await request(endpoint, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}); details.open = false; appError.style.display = 'none'; await reload(); } catch (exception) { showError(appError, exception); }
+        });
+        details.appendChild(form);
+        return details;
+    }
+
+    function adminRowActions(type, viewId, reload) {
+        return row => {
+            const actions = document.createElement('div'); actions.className = 'formActions';
+            const edit = document.createElement('button'); edit.type = 'button'; edit.textContent = 'Edit';
+            edit.addEventListener('click', () => { const editor = adminCreateForm(type, reload, row); editor.open = true; document.getElementById(viewId).querySelector('.viewHeader').appendChild(editor); });
+            const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Delete'; remove.className = 'danger';
+            remove.addEventListener('click', async () => { if (!confirm('Delete this record?')) return; try { await request('/api/admin/' + type + 's/' + row.id, {method:'DELETE'}); await reload(); } catch (exception) { showError(appError, exception); } });
+            actions.append(edit, remove); return actions;
+        };
+    }
+
+    async function loadStudents() { renderView('studentsView', 'Students', await request('/api/students'), [{key:'id',label:'ID'},{key:'firstName',label:'First name'},{key:'lastName',label:'Last name'},{key:'email',label:'Email'},{key:'department',label:'Department'},{key:'status',label:'Status'}], adminCreateForm('student', loadStudents), adminRowActions('student', 'studentsView', loadStudents)); }
+    async function loadCourses() {
+        const courses = await request('/api/courses');
+        const action = currentUser.role === 'Student' ? studentEnrollmentForm(courses) : adminCreateForm('course', loadCourses);
+        renderView('coursesView', currentUser.role === 'Student' ? 'Available courses' : 'Courses', courses, [{key:'id',label:'ID'},{key:'code',label:'Code'},{key:'name',label:'Name'},{key:'credits',label:'Credits'},{key:'department',label:'Department'},{key:'lecturer',label:'Lecturer'},{key:'maxEnrollment',label:'Capacity'}], action, currentUser.role === 'Student' ? null : adminRowActions('course', 'coursesView', loadCourses));
+    }
+    async function loadDepartments() { renderView('departmentsView', 'Departments', await request('/api/admin/departments'), [{key:'id',label:'ID'},{key:'code',label:'Code'},{key:'name',label:'Name'},{key:'location',label:'Location'},{key:'phone',label:'Phone'}], adminCreateForm('department', loadDepartments), adminRowActions('department', 'departmentsView', loadDepartments)); }
+    async function loadLecturers() { renderView('lecturersView', 'Lecturers', await request('/api/admin/lecturers'), [{key:'id',label:'ID'},{key:'firstName',label:'First name'},{key:'lastName',label:'Last name'},{key:'email',label:'Email'},{key:'department',label:'Department'},{key:'rank',label:'Rank'}], adminCreateForm('lecturer', loadLecturers), adminRowActions('lecturer', 'lecturersView', loadLecturers)); }
+    async function loadUsers() { renderView('usersView', 'Users', await request('/api/admin/users'), [{key:'id',label:'ID'},{key:'username',label:'Username'},{key:'fullName',label:'Full name'},{key:'role',label:'Role'}], adminCreateForm('user', loadUsers), adminRowActions('user', 'usersView', loadUsers)); }
+    async function loadEnrollments() { renderView('enrollmentsView', 'My enrollments', await request('/api/me/enrollments'), [{key:'courseCode',label:'Code'},{key:'course',label:'Course'},{key:'semester',label:'Semester'},{key:'academicYear',label:'Year'},{key:'grade',label:'Grade'},{key:'status',label:'Status'}]); }
+    async function loadRoster() { renderView('rosterView', 'Select a lecturer course', [], [{key:'student',label:'Student'}]); const courses = await request('/api/lecturer/courses'); const view = document.getElementById('rosterView'); const select = document.createElement('select'); const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'Choose a course'; select.appendChild(placeholder); courses.forEach(course => { const option = document.createElement('option'); option.value = course.id; option.textContent = course.code + ' - ' + course.name; select.appendChild(option); }); view.querySelector('.viewHeader').appendChild(select); select.addEventListener('change', async () => { if (!select.value) return; const roster = await request('/api/lecturer/courses/' + select.value + '/enrollments'); renderView('rosterView', 'Course roster', roster, [{key:'student',label:'Student'},{key:'courseCode',label:'Course'},{key:'grade',label:'Grade'},{key:'status',label:'Status'}], lecturerGradeForm(roster, loadRoster)); }); }
+
+    function lecturerGradeForm(roster, reload) {
+        const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'Update a grade'; details.appendChild(summary);
+        const form = document.createElement('form'); form.className = 'formGrid'; form.innerHTML = '<label class="wide">Enrollment<select name="enrollmentId" required><option value="">Choose a student</option></select></label><label>Grade<select name="grade" required><option>A+</option><option>A</option><option>A-</option><option>B+</option><option>B</option><option>B-</option><option>C+</option><option>C</option><option>C-</option><option>D+</option><option>D</option><option>F</option></select></label><label>Status<select name="status"><option>Completed</option><option>Enrolled</option><option>Dropped</option><option>Failed</option></select></label><div class="formActions wide"><button type="submit">Update grade</button></div>';
+        roster.forEach(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = item.student + ' · ' + item.courseCode; form.elements.enrollmentId.appendChild(option); });
+        form.addEventListener('submit', async event => { event.preventDefault(); const data = new FormData(form); try { await request('/api/lecturer/enrollments/' + data.get('enrollmentId') + '/grade', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({grade:data.get('grade'), status:data.get('status')})}); details.open = false; await reload(); } catch (exception) { showError(appError, exception); } });
+        return details;
+    }
+
+    function studentEnrollmentForm(courses) {
+        const form = document.createElement('form');
+        form.className = 'formGrid';
+        form.innerHTML = '<label class="wide">Enroll in course<select name="courseId" required><option value="">Choose a course</option></select></label><label>Semester<input name="semester" required></label><label>Academic year<input name="academicYear" required></label><div class="formActions wide"><button type="submit">Enroll</button></div>';
+        courses.forEach(course => { const option = document.createElement('option'); option.value = course.id; option.textContent = course.code + ' - ' + course.name; form.elements.courseId.appendChild(option); });
+        form.addEventListener('submit', async event => { event.preventDefault(); const data = new FormData(form); try { await request('/api/me/enrollments', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({courseId:Number(data.get('courseId')), semester:data.get('semester'), academicYear:data.get('academicYear')}) }); appError.style.display = 'none'; await loadEnrollments(); } catch (exception) { showError(appError, exception); } });
+        return form;
+    }
+
+    function setupDashboard(user) {
+        currentUser = user;
+        document.getElementById('welcome').textContent = 'Welcome, ' + user.fullName;
+        document.getElementById('identity').textContent = user.username + ' · ' + user.role;
+        document.getElementById('tabs').replaceChildren();
+        if (user.role === 'Admin' || user.role === 'Staff') { addTab('students', 'Students', loadStudents); addTab('courses', 'Courses', loadCourses); addTab('departments', 'Departments', loadDepartments); addTab('lecturers', 'Lecturers', loadLecturers); }
+        if (user.role === 'Admin') addTab('users', 'Users', loadUsers);
+        if (user.role === 'Student') { addTab('courses', 'Available courses', loadCourses); addTab('enrollments', 'My enrollments', loadEnrollments); }
+        if (user.role === 'Lecturer') { addTab('courses', 'My courses', async () => renderView('coursesView', 'My courses', await request('/api/lecturer/courses'), [{key:'code',label:'Code'},{key:'name',label:'Name'},{key:'department',label:'Department'},{key:'maxEnrollment',label:'Capacity'}])); addTab('roster', 'Course rosters', loadRoster); }
+        login.style.display = 'none'; app.style.display = 'block';
+        document.querySelector('.tabs button')?.click();
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async event => { event.preventDefault(); loginError.style.display = 'none'; const form = new FormData(event.target); try { const user = await request('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:form.get('username'), password:form.get('password')}) }); csrfToken = (await request('/api/auth/csrf')).token; setupDashboard(user); } catch (exception) { showError(loginError, exception); } });
+    document.getElementById('showRegistration').addEventListener('click', () => { document.getElementById('loginForm').hidden = true; document.getElementById('registrationPanel').hidden = false; });
+    document.getElementById('showLogin').addEventListener('click', () => { document.getElementById('registrationPanel').hidden = true; document.getElementById('loginForm').hidden = false; });
+    document.getElementById('registrationForm').addEventListener('submit', async event => { event.preventDefault(); const error = document.getElementById('registrationError'); error.style.display = 'none'; const data = new FormData(event.target); const payload = Object.fromEntries(data.entries()); payload.departmentId = Number(payload.departmentId); try { const user = await request('/api/auth/register/student', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)}); csrfToken = (await request('/api/auth/csrf')).token; setupDashboard(user); } catch (exception) { showError(error, exception); } });
+    request('/api/public/departments').then(departments => { const select = document.getElementById('registrationDepartment'); select.replaceChildren(new Option('Choose a department', '')); departments.forEach(department => select.add(new Option(department.name + ' (' + department.code + ')', department.id))); }).catch(() => { const select = document.getElementById('registrationDepartment'); select.replaceChildren(new Option('Departments unavailable', '')); });
+    document.getElementById('logout').addEventListener('click', async () => { try { await request('/api/auth/logout', {method:'POST'}); } finally { currentUser = null; csrfToken = null; app.style.display = 'none'; login.style.display = 'block'; document.getElementById('password').value = ''; } });
+    request('/api/auth/me').then(async user => { csrfToken = (await request('/api/auth/csrf')).token; setupDashboard(user); }).catch(() => {});
+</script>
+</body>
+</html>

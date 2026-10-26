@@ -13,7 +13,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <db.url>jdbc:mysql://localhost:3306/university_db?sslMode=PREFERRED&amp;serverTimezone=UTC</db.url>
-        <db.username>root</db.username>
+        <db.username></db.username>
         <db.password></db.password>
         <mysql.version>8.0.33</mysql.version>
         <hikari.version>5.0.1</hikari.version>
@@ -25,9 +25,32 @@
         <mockito.version>5.5.0</mockito.version>
         <hibernate.version>6.2.7.Final</hibernate.version>
         <h2.version>2.2.224</h2.version>
+        <spring.boot.version>3.3.5</spring.boot.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+        <!-- Web application -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- Database and Pooling -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -174,6 +197,11 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
             </plugin>
         </plugins>
     </build>

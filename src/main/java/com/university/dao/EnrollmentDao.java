@@ -32,10 +32,45 @@ public class EnrollmentDao {
         }
     }
 
+    public Enrollment getEnrollmentById(int enrollmentId) {
+        try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
+            Query<Enrollment> query = session.createQuery(
+                    "FROM Enrollment e LEFT JOIN FETCH e.student LEFT JOIN FETCH e.course " +
+                    "WHERE e.enrollmentId = :id", Enrollment.class);
+            query.setParameter("id", enrollmentId);
+            return query.uniqueResultOptional().orElse(null);
+        } catch (Exception e) {
+            logger.error("Failed to retrieve enrollment by id: {}", enrollmentId, e);
+            throw new DataAccessException("Failed to retrieve enrollment by id: " + enrollmentId, e);
+        }
+    }
+
     public boolean addEnrollment(Enrollment enrollment) {
         Transaction tx = null;
         try (Session session = SessionFactoryManager.getSessionFactory().openSession()) {
             tx = session.beginTransaction();
+
+                Query<Object> courseQuery = session.createNativeQuery(
+                    "SELECT max_enrollment FROM courses WHERE course_id = :courseId FOR UPDATE",
+                    Object.class);
+            courseQuery.setParameter("courseId", enrollment.getCourseId());
+                Object maximumEnrollmentValue = courseQuery.uniqueResult();
+                if (maximumEnrollmentValue == null) {
+                tx.rollback();
+                return false;
+            }
+
+            Query<Long> enrollmentCountQuery = session.createNativeQuery(
+                    "SELECT COUNT(*) FROM enrollments WHERE course_id = :courseId AND status = 'Enrolled'",
+                    Long.class);
+            enrollmentCountQuery.setParameter("courseId", enrollment.getCourseId());
+            int currentEnrollment = enrollmentCountQuery.getSingleResult().intValue();
+            int maximumEnrollment = ((Number) maximumEnrollmentValue).intValue();
+            if (currentEnrollment >= maximumEnrollment) {
+                tx.rollback();
+                return false;
+            }
+
             session.persist(enrollment);
             tx.commit();
             return true;

@@ -41,6 +41,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             throw new ValidationException("A student is already enrolled in this course for the specified semester and year");
         }
         boolean result = enrollmentDao.addEnrollment(enrollment);
+        if (!result) {
+            throw new ValidationException("Course is full or does not exist");
+        }
         logger.info("Enrollment added: {}", result);
         return result;
     }
@@ -71,6 +74,11 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Override
     public List<Enrollment> getAllEnrollments() {
         return enrollmentDao.getAllEnrollments();
+    }
+
+    @Override
+    public Enrollment getEnrollmentById(int enrollmentId) {
+        return enrollmentDao.getEnrollmentById(enrollmentId);
     }
 
     @Override

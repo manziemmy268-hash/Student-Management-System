@@ -108,6 +108,17 @@ class EnrollmentServiceImplTest {
     }
 
     @Test
+    @DisplayName("addEnrollment() throws ValidationException when the course is full")
+    void addEnrollment_fullCourse_throwsValidationException() {
+        Enrollment enrollment = buildEnrollment(0, 1, 1, "Fall", "2025");
+        when(enrollmentDao.isDuplicateEnrollment(1, 1, "Fall", "2025", -1)).thenReturn(false);
+        when(enrollmentDao.addEnrollment(enrollment)).thenReturn(false);
+
+        assertThrows(ValidationException.class,
+                () -> enrollmentService.addEnrollment(enrollment));
+    }
+
+    @Test
     @DisplayName("addEnrollment() throws ValidationException for duplicate enrollment")
     void addEnrollment_duplicateEnrollment_throwsValidationException() {
         when(enrollmentDao.isDuplicateEnrollment(1, 1, "Fall", "2025", -1)).thenReturn(true);
